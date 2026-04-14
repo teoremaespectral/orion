@@ -37,15 +37,20 @@ class Game:
         self.db_data[f"{self.user_id}_ai"] = self.ai.to_dict()
         save_db(self.db_data, 'games_data')
 
-    def reset(self):
+    def reset(self, strategy='dumb'):
         """Reinicia o jogo para o usuário atual"""
         self.player = Kingdom(self.user_id, self.user_name)
         self.ai = Kingdom(f"{self.user_id}_ai", "Bot")
         self.turn_count = 1
         self.status = "active"
-        self.ai_strategy = choice(['dumb', 'rusher', 'turtle', 'greedy'])
+        
+        # Se não vier estratégia (ou for aleatório), sorteia uma
+        if not strategy or strategy == "Aleatório":
+            self.ai_strategy = choice(['dumb', 'rusher', 'turtle', 'greedy'])
+        else:
+            self.ai_strategy = strategy.lower() # Converte de 'Rusher' para 'rusher'
+            
         self.save()
-        return
 
     def play_turn(self, action_type):
         """

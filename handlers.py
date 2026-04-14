@@ -13,14 +13,35 @@ def get_main_keyboard():
 
 handlers = []
 
+def get_strategy_keyboard():
+    return ReplyKeyboardMarkup(keyboard=[
+        [KeyboardButton(text="Dumb"), KeyboardButton(text="Rusher")],
+        [KeyboardButton(text="Turtle"), KeyboardButton(text="Greedy")],
+        [KeyboardButton(text="Aleatório")]
+    ], resize_keyboard=True, one_time_keyboard=True)
+
 @handlers.append
 def start_game(m: M):
     if m.command == "/start":
-        game = Game(m.user_id, m.user_name)
-        game.reset()
+        # Apenas enviamos a pergunta inicial
         texto = (f"Saudações, Soberano {m.user_name}! 🏰\n\n"
-                 "Seu reino foi fundado. O inimigo está à espreita.\n"
-                 "Prepare-se para a guerra!")
+                 "Antes de começarmos, escolha o perfil do reino inimigo:")
+        send_message(m.chat_id, texto, reply_markup=get_strategy_keyboard())
+
+@handlers.append
+def handle_strategy_selection(m: M):
+    # Verifica se o texto é uma das estratégias
+    strategies = ["Dumb", "Rusher", "Turtle", "Greedy", "Aleatório"]
+    if m.text in strategies:
+        game = Game(m.user_id, m.user_name)
+        game.reset(strategy=m.text) # Passa a escolha para o reset
+        
+        revelacao = f"Inimigo definido como: {game.ai_strategy.upper()}!"
+        if m.text == "Aleatório":
+            revelacao = "O destino decidiu! O perfil do inimigo é um mistério... 🌚"
+
+        texto = (f"{revelacao}\n\n"
+                 "Seu reino foi fundado. Prepare-se para a guerra!")
         send_message(m.chat_id, texto, reply_markup=get_main_keyboard())
 
 @handlers.append
