@@ -5,6 +5,7 @@ import constants as c
 PLAYER_CIV_SELECT = f"Saudações, Soberano! 🏰\n\nEscolha a sua Civilização:"
 AI_CIV_SELECT = "Ótima escolha! Agora, qual será a Civilização do Inimigo?"
 STRATEGY_SELECT = "E qual será a postura estratégica do oponente?"
+
 def WAR_START(p_civ, a_civ, strategy):
     texto = (
         "🚩 **GUERRA DECLARADA!**\n\n"
@@ -24,17 +25,12 @@ def BUILD_MENU_MSG(player):
     return texto
 
 def STATUS_MSG(player, turn):
-    # Cálculo de bônus de civ para exibir no status (opcional, mas ajuda o jogador)
-    bonus_text = ""
-    if player.civ == "Teresópolis": bonus_text = " (Montanhas 🏔️)"
-    elif player.civ == "Volta Redonda": bonus_text = " (Fábricas 🏭)"
-
     texto = (
         f"👑 **REINO DE {player.user_name}**\n"
         f"🏛️ Civilização: *{c.CIVS[player.civ]['label']}*\n"
         f"📅 Turno: {turn}\n"
         f"────────────────────\n"
-        f"❤️ Integridade: {player.life}/200\n"
+        f"❤️ Integridade: {player.life}/{c.INITIAL_LIFE}\n"
         f"⚔️ Força Militar: {player.army} soldados\n"
         f"🧱 Defesa (Muros): {player.buildings.get('muro', 0)}\n"
         f"────────────────────\n"
@@ -57,52 +53,75 @@ def TURN_REPORT_INTRODUCTION(turn):
 
 def ACTION_FEEDBACK(report):
     p_act = report.get('player_action', {})
-    feedback = ""
+    if not p_act: return ""
     
+    feedback = ""
     if p_act.get('type') == 'build':
         target = p_act.get('target')
+        label = c.BUILDINGS.get(target, {}).get('label', target)
         if p_act.get('success'):
-            feedback = f"✅ **Sucesso!** A construção de *{c.BUILDINGS[target]['label']}* foi concluída."
+            feedback = f"✅ **Sucesso!** A construção de *{label}* foi concluída."
         else:
-            feedback = f"❌ **Falha!** Não foi possível construir *{target}* (Recursos ou Slots insuficientes)."
+            feedback = f"❌ **Falha!** Recursos ou Slots insuficientes para *{label}*."
             
     elif p_act.get('type') == 'army':
-        feedback = "⚔️ **Recrutamento:** Novos soldados se juntaram às suas fileiras." if p_act.get('success') else "🍎 **Fome!** Sem comida para treinar mais soldados."
+        if p_act.get('success'):
+            feedback = "⚔️ **Recrutamento:** Novos soldados se juntaram às suas fileiras."
+        else:
+            feedback = "🍎 **Fome!** Sem comida suficiente para treinar soldados."
+            
+    elif p_act.get('type') == 'attack':
+        if p_act.get('success'):
+            feedback = "🏹 **Ofensiva:** Suas tropas marcharam para o combate!"
+        else:
+            feedback = "🚫 **Cancelado:** Você não tem soldados para atacar."
 
     return feedback
 
 def FIGHT_FEEDBACK(report):
-    fd = report["fight_data"]
-    sit = fd["situation"]
-    is_invasion = "is_over" in fd
+    fd = report.get("fight_data")
+    if not fd: return ""
+
+    sit = fd.get("situation")
+    is_invasion = fd.get("is_invasion", False)
     
+    # Lógica corrigida para identificar quem atacou quem
+    p_atk = report['player_action'].get('type') == 'attack' and report['player_action'].get('success')
+    ai_atk = report['ai_action'].get('type') == 'attack' and report['ai_action'].get('success')
+
     feedback = ""
 
-    if not is_invasion:
+    if p_atk and ai_atk:
         feedback += f"\n💥 **CONFLITO EM CAMPO ABERTO!**\n"
-        
-        feedback += f"⚔️ Força inimiga: {fd.get('defender_start_army') or 'Desconhecida'}\n"
+        feedback += f"⚔️ Seu exército: {fd.get('attacker_start_army')}\n"
+        feedback += f"⚔️ Exército inimigo: {fd.get('defender_start_army')}\n"
+    elif p_atk:
+        feedback += f"\n🏰 **VOCÊ INVADIU O INIMIGO!**\n"
+        feedback += f"🛡️ Defesa deles: {fd.get('defender_start_army')} soldados + Muros\n"
     else:
-        target = "seu reino" if report["ai_action"]["type"] == "attack" and report['player_action'] != "attack" else "reino inimigo"
-        feedback += f"\n🏰 **INVASÃO DETECTADA!**\n"
-        feedback += f"Alvo: *{target}*\n"
-        # Mostrando dados de exército e vida no cerco
-        feedback += f"⚔️ Força atacante: {fd.get('attacker_start_army')}\n"
-        feedback += f"🛡️ Força defensora: {fd.get('defender_start_army')}\n"
+        feedback += f"\n🏰 **SEU REINO FOI INVADIDO!**\n"
+        feedback += f"⚔️ Atacantes: {fd.get('attacker_start_army')}\n"
 
     sit_map = {
         'draw': "⚖️ *Empate!* Ambos os exércitos foram dizimados.",
         'costly_win': "⚠️ *Vitória sofrida!* Você manteve o campo por pouco.",
         'true_win': "🏆 *Vitória total!* O inimigo recuou em pânico.",
-        'costly_defeat': "❌ *Derrota amarga!* Suas tropas recuaram.", # ADICIONAR
-        'total_defeat': "💀 *Massacre!* Seu exército foi aniquilado.", # ADICIONAR
-        'full_block': "🛡️ *Defesa impenetrável!* O ataque não surtiu efeito.",
-        'costly_block': "🩸 *Batalha sangrenta nas muralhas!*",
+        'costly_defeat': "❌ *Derrota amarga!* Suas tropas recuaram pesadamente.",
+        'total_defeat': "💀 *Massacre!* Seu exército foi aniquilado em campo.",
+        'full_block': "🛡️ *Defesa impenetrável!* O ataque foi repelido sem baixas no reino.",
+        'costly_block': "🩸 *Batalha sangrenta nas muralhas!* O muro segurou, mas houve perdas.",
         'pilhage': "🔥 *MURALHAS INVADIDAS!* A cidade está sendo saqueada!",
         'complete_destruction': "💥 *ANIQUILAÇÃO!* A cidade foi reduzida a cinzas!"
     }
-    feedback += f"📢 **DESFECHO:** {sit_map.get(sit)}\n"
+    
+    res_text = sit_map.get(sit, "O combate terminou de forma incerta...")
+    feedback += f"📢 **DESFECHO:** {res_text}\n"
+    
+    if fd.get('defender_damage_taken', 0) > 0:
+        alvo = "Inimigo" if p_atk else "Seu reino"
+        feedback += f"🏚️ **Dano:** {alvo} perdeu {fd['defender_damage_taken']} de integridade.\n"
+        
     return feedback
 
-VICTORY = "🏆 **VITÓRIA SUPREMA!**"
-FAILURE = "💀 **DERROTA TOTAL...**"
+VICTORY = "🏆 **VITÓRIA SUPREMA!** O reino inimigo caiu!"
+FAILURE = "💀 **DERROTA TOTAL...** Seu povo foi subjugado."

@@ -158,12 +158,24 @@ def handle_actions(m: M):
         # 3. Feedback da IA (Opcional: você quer que o jogador saiba o que a IA fez?)
         # Se quiser esconder a IA para dar mistério, pule esta parte.
         if report['ai_action']['success']:
-            ai_act = report['ai_action']['target'] or "treinou exército"
-            full_report += f"🕵️ **Espiões relatam:** Inimigo agiu em {ai_act}.\n"
+            ai_raw_target = report['ai_action']['target']
+            ai_type = report['ai_action']['type']
+            
+            if ai_type == 'army':
+                detalhe = "recrutando novos soldados ⚔️"
+            elif ai_type == 'build':
+                # Busca o nome bonitinho da construção no constants.py
+                label = consts.BUILDINGS.get(ai_raw_target, {}).get('label', ai_raw_target)
+                detalhe = f"construindo {label} 🏗️"
+            else:
+                detalhe = "planejando uma ofensiva 🚩"
+                
+            full_report += f"🕵️ **Espiões relatam:** Inimigo foi visto {detalhe}.\n"
 
         # 4. Feedback de Combate (Se houve luta)
         if report.get("fight_data"):
             full_report += txt.FIGHT_FEEDBACK(report)
+            pass
 
         # 5. Envia tudo em uma única mensagem elegante
         send_message(m.chat_id, full_report, reply_markup=get_main_keyboard())

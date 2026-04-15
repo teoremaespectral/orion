@@ -223,7 +223,8 @@ class CombatEngine:
             "defender_start_life": self.stats_pre["defender_life"],
             "defender_damage_taken": self.stats_pre["defender_life"] - self.defender.life if is_invasion else 0,
             "attacker_loss": a_loss,
-            "defender_loss": d_loss
+            "defender_loss": d_loss,
+            "is_invasion": is_invasion,
         }
         if is_invasion: 
             '''Em combates de invasão, o relatório também inclui se o defensor foi derrotado (vida <= 0) e a vida final do defensor após o combate.'''
