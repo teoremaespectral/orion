@@ -7,37 +7,46 @@ from random import choice
 class Game:
     '''Controla o estado do jogo para um usuário específico, incluindo os reinos do jogador e da IA, o número de turnos, a estratégia da IA e o status do jogo. Fornece métodos para configurar o jogo, processar os turnos e verificar condições de vitória.'''
     def __init__(self, user_id, user_name):
-        '''Inicializa o jogo para um usuário, carregando os dados do banco de dados ou criando um novo estado se o usuário for novo. Configura os reinos do jogador e da IA, bem como a estratégia da IA.'''
+        '''Inicializa o jogo para um usuário, carregando o estado do jogo do banco de dados se existir, ou criando um novo estado se for um novo jogador. Garante que os reinos sejam corretamente configurados com base nas civilizações escolhidas e que a estratégia da IA seja definida.'''
         self.user_id = str(user_id)
         self.user_name = user_name
-        self.db_data = get_db('games_data') # Arquivo específico para partidas
+        self.db_data = get_db('games_data')
 
         user_data = self.db_data.get(self.user_id)
         ai_data = self.db_data.get(f"{self.user_id}_ai")
 
         if not user_data:
             self.turn_count = 1
-            self.status = "active" # active, player_won, ai_won
+            self.status = "active"
             self.ai_strategy = choice(['dumb', 'rusher', 'turtle', 'greedy'])
+            # NOVA FILA DE TÁTICAS
+            self.ai_current_plan = [] 
+            
+            self.player = Kingdom(self.user_id, user_name)
+            self.ai = Kingdom(f"{self.user_id}_ai", f"IA ({self.ai_strategy})")
+            self.ai.civ = choice(list(consts.CIVS.keys()))
         else:
             self.turn_count = user_data.get('turn_count', 1)
             self.status = user_data.get('status', 'active')
             self.ai_strategy = user_data.get('ai_strategy', 'dumb')
-        
-        # Carrega ou cria os reinos
-        self.player = Kingdom(self.user_id, self.user_name, user_data)
-        self.ai = Kingdom(f"{self.user_id}_ai", "Bot", ai_data)
+            # RECUPERA A FILA DO BANCO
+            self.ai_current_plan = user_data.get('ai_current_plan', [])
+            
+            self.player = Kingdom(self.user_id, user_name, data=user_data)
+            self.ai = Kingdom(f"{self.user_id}_ai", f"IA ({self.ai_strategy})", data=ai_data)
 
     def save(self):
-        """Atualiza o banco de dados com os estados atuais"""
-        player_dict = self.player.to_dict()
-        player_dict['turn_count'] = self.turn_count
-        player_dict['status'] = self.status
-        player_dict['ai_strategy'] = self.ai_strategy
-        
-        self.db_data[self.user_id] = player_dict
+        '''Salva o estado atual do jogo no banco de dados, incluindo os dados do jogador, da IA, o número de turnos, a estratégia da IA e a fila de táticas atual. Garante que todas as informações relevantes sejam armazenadas para que o jogo possa ser retomado posteriormente.'''
+        player_data = self.player.to_dict()
+        player_data['turn_count'] = self.turn_count
+        player_data['status'] = self.status
+        player_data['ai_strategy'] = self.ai_strategy
+        # SALVA A FILA ATUAL
+        player_data['ai_current_plan'] = self.ai_current_plan
+
+        self.db_data[self.user_id] = player_data
         self.db_data[f"{self.user_id}_ai"] = self.ai.to_dict()
-        save_db(self.db_data, 'games_data')
+        save_db('games_data', self.db_data)
 
     def setup(self, player_civ="Teresópolis", ai_civ="Petrópolis", strategy="Aleatório"):
         '''Configura o jogo para um novo usuário, definindo as civilizações do jogador e da IA, bem como a estratégia da IA. Garante que os reinos sejam criados com os bônus e modificadores corretos de acordo com as civilizações escolhidas. Salva o estado inicial do jogo no banco de dados.'''
@@ -113,12 +122,31 @@ class Game:
         return action
 
     def process_ai_turn(self):
-        """Simula a decisão da IA"""
-        ai_action = AI_logic.get_ai_decision(self.ai_strategy, self.ai)
-        a_type, a_target = ai_action['type'], ai_action['target']
+        """
+        Gerencia a fila de táticas da IA. Se não houver plano, pede um novo 
+        para a AI_logic baseado na estratégia.
+        """
+        # 1. Se não há plano, consulta a estratégia para gerar uma sequência (lista)
+        if not self.ai_current_plan:
+            # Chama a função principal do AI_logic que redireciona para a estratégia correta
+            new_sequence = AI_logic.get_ai_tactic(self.ai_strategy, self.ai)
+            self.ai_current_plan = new_sequence
 
-        ai_action['success'] = False
+        # 2. Retira a primeira ação da fila (FIFO)
+        # Cada item da sequência é algo como: ['build', 'casa'] ou ['army', 'train_army']
+        current_step = self.ai_current_plan.pop(0)
         
+        a_type = current_step[0]
+        a_target = current_step[1] if len(current_step) > 1 else None
+
+        ai_action = {
+            'type': a_type, 
+            'target': a_target, 
+            'success': False,
+            'plan_remaining': len(self.ai_current_plan) # Para debug/log se quiser
+        }
+
+        # 3. Tenta executar
         if a_type == "build":
             if self.ai.build(a_target):
                 ai_action['success'] = True
@@ -126,9 +154,15 @@ class Game:
             if self.ai.train_army():
                 ai_action['success'] = True
         elif a_type == "attack":
+            # A IA só gasta o turno de ataque se tiver exército
             if self.ai.army > 0:
                 ai_action['success'] = True
-    
+        
+        # 4. Se a ação falhou (falta de recurso), podemos devolver ela para o topo da fila
+        # para a IA tentar novamente no próximo turno.
+        if not ai_action['success'] and a_type != "attack":
+            self.ai_current_plan.insert(0, current_step)
+
         return ai_action
 
     def process_fight(self, player_action, ai_action):

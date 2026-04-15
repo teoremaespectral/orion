@@ -153,6 +153,6 @@ def handle_actions(m: M):
         feedback = txt.ACTION_FEEDBACK(report)
         # Se houve luta, anexa o relatório de combate
         if report.get("fight_data"):
-            feedback += txt.COMBAT_REPORT(report["fight_data"], report)
+            feedback += txt.FIGHT_FEEDBACK(report)
             
         send_message(m.chat_id, feedback, reply_markup=get_main_keyboard())
