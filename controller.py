@@ -5,7 +5,9 @@ import AI_logic
 from random import choice
 
 class Game:
+    '''Controla o estado do jogo para um usuário específico, incluindo os reinos do jogador e da IA, o número de turnos, a estratégia da IA e o status do jogo. Fornece métodos para configurar o jogo, processar os turnos e verificar condições de vitória.'''
     def __init__(self, user_id, user_name):
+        '''Inicializa o jogo para um usuário, carregando os dados do banco de dados ou criando um novo estado se o usuário for novo. Configura os reinos do jogador e da IA, bem como a estratégia da IA.'''
         self.user_id = str(user_id)
         self.user_name = user_name
         self.db_data = get_db('games_data') # Arquivo específico para partidas
@@ -38,6 +40,7 @@ class Game:
         save_db(self.db_data, 'games_data')
 
     def setup(self, player_civ="Teresópolis", ai_civ="Petrópolis", strategy="Aleatório"):
+        '''Configura o jogo para um novo usuário, definindo as civilizações do jogador e da IA, bem como a estratégia da IA. Garante que os reinos sejam criados com os bônus e modificadores corretos de acordo com as civilizações escolhidas. Salva o estado inicial do jogo no banco de dados.'''
         # Garante que criamos reinos limpos com a civ correta
         self.player = Kingdom(self.user_id, self.user_name)
         self.player.civ = player_civ
@@ -56,7 +59,7 @@ class Game:
         
         self.save()
 
-    def play_turn(self, action_type):
+    def play_turn(self, action):
         """
         Orquestra o turno:
         1. Executa ação do jogador
@@ -68,11 +71,10 @@ class Game:
         #O feedback do que ocorreu no turno
 
         # 1. Ação do Jogador
-        player_action = action_type
-        player_result = self.process_player_turn(action_type)
+        player_action = self.process_player_turn(action)
 
         # 2. Turno da IA (Lógica simples por enquanto)
-        ai_action, ai_result = self.process_ai_turn()
+        ai_action = self.process_ai_turn()
 
         # 3. Checa se há combate
         fight_data = self.process_fight(player_action, ai_action)
@@ -88,55 +90,63 @@ class Game:
 
         report = {
             "player_action": player_action,
-            "player_result": player_result,
             "ai_action": ai_action,
-            "ai_result": ai_result,
             "fight_data": fight_data,
         }
         return report
     
-    def process_player_turn(self, action_type):
-        if action_type == "farm":
-            if self.player.build_farm():
-                return action_type
-        elif action_type == "army":
+    def process_player_turn(self, action):
+        a_type, a_target = action['type'], action['target']
+
+        action['success'] = False
+
+        if a_type == "build":
+            if self.player.build(a_target):
+                action['success'] = True
+        elif a_type == "army":
             if self.player.train_army():
-                return action_type
-        elif action_type == "attack":
+                action['success'] = True
+        elif a_type == "attack":
             if self.player.army > 0:
-                return action_type
+                action['success'] = True
         
-        return "fail"
+        return action
 
     def process_ai_turn(self):
         """Simula a decisão da IA"""
-        action_type = AI_logic.get_ai_decision(self.ai_strategy, self.ai)
+        ai_action = AI_logic.get_ai_decision(self.ai_strategy, self.ai)
+        a_type, a_target = ai_action['type'], ai_action['target']
+
+        ai_action['success'] = False
         
-        if action_type == "farm":
-            if self.ai.build_farm():
-                return action_type, action_type
-        elif action_type == "army":
+        if a_type == "build":
+            if self.ai.build(a_target):
+                ai_action['success'] = True
+        elif a_type == "army":
             if self.ai.train_army():
-                return action_type, action_type
-        elif action_type == "attack":
+                ai_action['success'] = True
+        elif a_type == "attack":
             if self.ai.army > 0:
-                return action_type, action_type
-        
-        return action_type, "fail"
+                ai_action['success'] = True
+    
+        return ai_action
 
     def process_fight(self, player_action, ai_action):
         """Simulação de combate"""
-        if player_action == "attack" and ai_action == "attack":
+        p_true_attack = player_action['type'] == "attack" and player_action['success']
+        ai_true_attack = ai_action['type'] == "attack" and ai_action['success']
+
+        if p_true_attack and ai_true_attack:
             # Caso 1: Ambos atacam -> Campo Aberto
             engine = CombatEngine(self.player, self.ai)
             return engine.resolve(type="open_field")
             
-        elif player_action == "attack":
+        elif p_true_attack:
             # Caso 2: Só jogador ataca -> Invasão à IA
             engine = CombatEngine(self.player, self.ai)
             return engine.resolve(type="invasion")
             
-        elif ai_action == "attack":
+        elif ai_true_attack:
             # Caso 3: Só IA ataca -> Invasão ao Jogador
             engine = CombatEngine(self.ai, self.player)
             return engine.resolve(type="invasion")
