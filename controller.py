@@ -37,7 +37,7 @@ class Game:
         self.db_data[f"{self.user_id}_ai"] = self.ai.to_dict()
         save_db(self.db_data, 'games_data')
 
-    def reset(self, player_civ="Teresópolis", ai_civ="Petrópolis", strategy="Aleatório"):
+    def setup(self, player_civ="Teresópolis", ai_civ="Petrópolis", strategy="Aleatório"):
         # Garante que criamos reinos limpos com a civ correta
         self.player = Kingdom(self.user_id, self.user_name)
         self.player.civ = player_civ
@@ -192,6 +192,9 @@ class Game:
         else:
             attacker, defender = self.ai, self.player
 
+        attacker_start_army = attacker.army
+        defender_start_army = defender.army
+
         #Fase 1: Cerco
         mod = consts.CIVS.get(defender.civ, {}).get('mods', {}).get('wall_defense', 1.0)
         city_defense = consts.DEFENSE*mod
@@ -234,8 +237,10 @@ class Game:
         return {
             "situation" : situation,
             "is_over" : not defender_is_alive,
+            "attacker_start_army" : attacker_start_army,
             "attacker_final_army" : attacker.army, 
             "attacker_loss" : attacker_loss,
+            "defender_start_army" : defender_start_army,
             "defender_final_army" : defender.army,
             "defender_loss" : defender_loss
         }
