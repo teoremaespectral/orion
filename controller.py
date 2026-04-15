@@ -37,19 +37,23 @@ class Game:
         self.db_data[f"{self.user_id}_ai"] = self.ai.to_dict()
         save_db(self.db_data, 'games_data')
 
-    def reset(self, strategy='dumb'):
-        """Reinicia o jogo para o usuário atual"""
+    def reset(self, player_civ="Teresópolis", ai_civ="Petrópolis", strategy="Aleatório"):
+        # Garante que criamos reinos limpos com a civ correta
         self.player = Kingdom(self.user_id, self.user_name)
+        self.player.civ = player_civ
+    
         self.ai = Kingdom(f"{self.user_id}_ai", "Bot")
+        self.ai.civ = ai_civ
+    
         self.turn_count = 1
         self.status = "active"
-        
-        # Se não vier estratégia (ou for aleatório), sorteia uma
-        if not strategy or strategy == "Aleatório":
+    
+        # Tratamento da estratégia
+        if strategy == "Aleatório":
             self.ai_strategy = choice(['dumb', 'rusher', 'turtle', 'greedy'])
         else:
-            self.ai_strategy = strategy.lower() # Converte de 'Rusher' para 'rusher'
-            
+            self.ai_strategy = strategy.lower()
+        
         self.save()
 
     def play_turn(self, action_type):
@@ -189,8 +193,10 @@ class Game:
             attacker, defender = self.ai, self.player
 
         #Fase 1: Cerco
-        LOW_THRESHOLD = consts.DEFENSE + defender.army*consts.SIEGE_LOWBLOCKFACTOR
-        HIGH_THRESHOLD = consts.DEFENSE + defender.army*consts.SIEGE_HIGHBLOCKFACTOR
+        mod = consts.CIVS.get(defender.civ, {}).get('mods', {}).get('wall_defense', 1.0)
+        city_defense = consts.DEFENSE*mod
+        LOW_THRESHOLD = city_defense + defender.army*consts.SIEGE_LOWBLOCKFACTOR
+        HIGH_THRESHOLD = city_defense + defender.army*consts.SIEGE_HIGHBLOCKFACTOR
         situation = None
 
         if attacker.army <= LOW_THRESHOLD:
@@ -210,7 +216,8 @@ class Game:
             if defender.army != 0 and attacker.army/defender.army < consts.PILHAGE_DOMINANCERATIO:
                 attacker_loss = consts.PILHAGE_BASELOSS
                 defender_loss = consts.PILHAGE_BASELOSS
-                defender.life = max(0, defender.life - consts.PILHAGE_DAMAGEFACTOR*attacker.army*(1-attacker_loss))
+                mod = consts.CIVS.get(defender.civ, {}).get('mods', {}).get('pilhage_damage', 1.0)
+                defender.life = int(max(0, defender.life - consts.PILHAGE_DAMAGEFACTOR*attacker.army*(1-attacker_loss)*mod))
                 situation = 'pilhage'
 
             else:

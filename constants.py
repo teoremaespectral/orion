@@ -1,3 +1,34 @@
+CIVS = {
+    "Teresópolis": {
+        "label": "Teresópolis 🏔️",
+        "bonus": "Cerco de Montanhas: Muralhas 40% mais resistentes.",
+        "mods": {
+            "wall_defense": 1.4,
+        }
+    },
+    "Petrópolis": {
+        "label": "Petrópolis 🏰",
+        "bonus": "Tropas Reais: Treinamento gera 20% mais soldados com a mesma comida.",
+        "mods": {
+            "army_cost": 1.2,
+        }
+    },
+    "Volta Redonda": {
+        "label": "Volta Redonda 🏭",
+        "bonus": "Fábricas: Produção de recursos 25% maior.",
+        "mods": {
+            "food_production": 1.25,
+        }
+    },
+    "Rio de Janeiro": {
+        "label": "Rio de Janeiro 🏖️",
+        "bonus": "Cidade Maravilhosa: Invasores dão metade do dano às cidades",
+        "mods": {
+            "pilhage_damage": 0.5,
+        }
+    }
+}
+
 INITIAL_LIFE = 200
 INITIAL_FARMS = 1
 INITIAL_FOOD = 5

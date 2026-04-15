@@ -1,17 +1,22 @@
 from bot import my_bot
 from Message import Message as M
 from controller import Game
+import constants as consts
 from telepot.namedtuple import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 
-send_message = my_bot.sendMessage
+# Atalho para garantir que o Markdown funcione sempre
+def send_message(chat_id, text, reply_markup=None):
+    return my_bot.sendMessage(chat_id, text, reply_markup=reply_markup, parse_mode='Markdown')
 
-def get_main_keyboard():
-    return ReplyKeyboardMarkup(keyboard=[
-        [KeyboardButton(text="🌱 Criar Fazenda"), KeyboardButton(text="⚔️ Treinar Exército")],
-        [KeyboardButton(text="😈 ATACAR"), KeyboardButton(text="📊 Status")]
-    ], resize_keyboard=True)
+# --- TECLADOS ---
 
-handlers = []
+def get_civ_keyboard():
+    keys = []
+    for name, info in consts.CIVS.items():
+        # Requisito 3: Descrições aparecendo na seleção
+        text = f"{info['label']} - {info['bonus']}"
+        keys.append([KeyboardButton(text=text)])
+    return ReplyKeyboardMarkup(keyboard=keys, resize_keyboard=True, one_time_keyboard=True)
 
 def get_strategy_keyboard():
     return ReplyKeyboardMarkup(keyboard=[
@@ -20,95 +25,128 @@ def get_strategy_keyboard():
         [KeyboardButton(text="Aleatório")]
     ], resize_keyboard=True, one_time_keyboard=True)
 
+def get_main_keyboard():
+    return ReplyKeyboardMarkup(keyboard=[
+        [KeyboardButton(text="🌱 Criar Fazenda"), KeyboardButton(text="⚔️ Treinar Exército")],
+        [KeyboardButton(text="😈 ATACAR"), KeyboardButton(text="📊 Status")]
+    ], resize_keyboard=True)
+
+user_selections = {}
+handlers = []
+
 @handlers.append
 def start_game(m: M):
     if m.command == "/start":
-        # Apenas enviamos a pergunta inicial
-        texto = (f"Saudações, Soberano {m.user_name}! 🏰\n\n"
-                 "Antes de começarmos, escolha o perfil do reino inimigo:")
-        send_message(m.chat_id, texto, reply_markup=get_strategy_keyboard())
+        user_selections[m.user_id] = {"step": "choosing_player_civ"}
+        texto = f"Saudações, Soberano *{m.user_name}*! 🏰\n\nEscolha a sua Civilização:"
+        send_message(m.chat_id, texto, reply_markup=get_civ_keyboard())
 
 @handlers.append
-def handle_strategy_selection(m: M):
-    # Verifica se o texto é uma das estratégias
-    strategies = ["Dumb", "Rusher", "Turtle", "Greedy", "Aleatório"]
-    if m.text in strategies:
-        game = Game(m.user_id, m.user_name)
-        game.reset(strategy=m.text) # Passa a escolha para o reset
-        
-        revelacao = f"Inimigo definido como: {game.ai_strategy.upper()}!"
-        if m.text == "Aleatório":
-            revelacao = "O destino decidiu! O perfil do inimigo é um mistério... 🌚"
+def handle_setup_flow(m: M):
+    state = user_selections.get(m.user_id, {}).get("step")
+    if not state: return
 
-        texto = (f"{revelacao}\n\n"
-                 "Seu reino foi fundado. Prepare-se para a guerra!")
-        send_message(m.chat_id, texto, reply_markup=get_main_keyboard())
+    if state == "choosing_player_civ":
+        chosen = next((k for k, v in consts.CIVS.items() if v["label"] in m.text), None)
+        if chosen:
+            user_selections[m.user_id]["player_civ"] = chosen
+            user_selections[m.user_id]["step"] = "choosing_ai_civ"
+            send_message(m.chat_id, "Ótima escolha! Agora, qual será a Civilização do Inimigo?",
+                         reply_markup=get_civ_keyboard())
+
+    elif state == "choosing_ai_civ":
+        chosen = next((k for k, v in consts.CIVS.items() if v["label"] in m.text), None)
+        if chosen:
+            user_selections[m.user_id]["ai_civ"] = chosen
+            user_selections[m.user_id]["step"] = "choosing_strategy"
+            send_message(m.chat_id, "E qual será a postura estratégica do oponente?",
+                         reply_markup=get_strategy_keyboard())
+
+    elif state == "choosing_strategy":
+        strategies = ["Dumb", "Rusher", "Turtle", "Greedy", "Aleatório"]
+        if m.text in strategies:
+            p_civ = user_selections[m.user_id]["player_civ"]
+            a_civ = user_selections[m.user_id]["ai_civ"]
+            game = Game(m.user_id, m.user_name)
+            game.reset(player_civ=p_civ, ai_civ=a_civ, strategy=m.text)
+            del user_selections[m.user_id]
+
+            texto = (f"🚩 **GUERRA DECLARADA!**\n\n"
+                     f"Sua Civ: *{consts.CIVS[p_civ]['label']}*\n"
+                     f"Inimigo: *{consts.CIVS[a_civ]['label']}*\n\n"
+                     "O *Fog of War* está ativo. Você só verá o exército inimigo em combate!")
+            send_message(m.chat_id, texto, reply_markup=get_main_keyboard())
 
 @handlers.append
 def show_status(m: M):
     if m.command == "/status" or m.text == "📊 Status":
         game = Game(m.user_id, m.user_name)
         p = game.player
+        # Fog of War: IA fica oculta
         status_msg = (
-            f"👑 **{p.user_name.upper()}** | Turno: {game.turn_count}\n"
-            f"❤️ Vida: {p.life} | 🌾 Fazendas: {p.farms}\n"
-            f"🍎 Comida: {p.food} | 🗡️ Exército: {p.army}\n"
-            "--------------------------"
+            f"👑 **STATUS DO REINO**\n"
+            f"Civilização: *{consts.CIVS[p.civ]['label']}*\n"
+            f"❤️ Vida: *{p.life}*\n"
+            f"⚔️ Exército: *{p.army}*\n"
+            f"🌱 Fazendas: *{p.farms}* | 🍎 Comida: *{p.food}*\n"
+            f"--------------------------\n"
+            f"📅 Turno: *{game.turn_count}*\n"
+            f"🌫️ _Inimigo oculto pela neblina de guerra..._"
         )
-        send_message(m.chat_id, status_msg, parse_mode="Markdown")
+        send_message(m.chat_id, status_msg)
 
 @handlers.append
 def handle_actions(m: M):
     actions = {"🌱 Criar Fazenda": "farm", "⚔️ Treinar Exército": "army", "😈 ATACAR": "attack"}
-    
     if m.text in actions:
         game = Game(m.user_id, m.user_name)
-
         if game.status != "active":
-            res = "VITÓRIA! 🎉" if game.status == "player_won" else "DERROTA... ⚰️"
-            send_message(m.chat_id, f"O jogo acabou! {res}\nUse /start para reiniciar.")
+            send_message(m.chat_id, "O jogo acabou! Use /start para reiniciar.")
             return
+
+        # Guardamos os dados ANTES para o Fog of War
+        enemy_army_pre = game.ai.army
+        enemy_life_pre = game.ai.life
 
         report = game.play_turn(actions[m.text])
 
-        # 1. Feedback Básico de Ação
-        txt_map = {"farm": "🌱 Nova fazenda!", "army": "⚔️ Recrutamento concluído!", "attack": "🔥 Marcha iniciada!", "fail": "⚠️ Falha (recursos/exército)!"}
-        
-        feedback = (f"📅 **TURNO {game.turn_count - 1}**\n"
-                    f"{txt_map.get(report['player_result'], 'Ocioso')}\n"
-                    "--------------------------\n")
+        # CORREÇÃO: Feedback agora é montado fora de qualquer IF específico
+        feedback = f"📅 **RELATÓRIO DO TURNO {game.turn_count - 1}**\n\n"
+        feedback += f"Sua ação: *{m.text}*\n"
 
-        # 2. Feedback de Combate (Se houver)
-        if report["fight_data"]:
+        if report["fight_data"] is not None:
             fd = report["fight_data"]
             sit = fd["situation"]
-            
-            # Traduções das situações que criamos
-            sit_map = {
-                'draw': "⚔️ Empate sangrento no campo!",
-                'costly_win': "⚠️ Vitória custosa em campo aberto!",
-                'true_win': "🏆 Massacre! Você dominou o campo!",
-                'full_block': "🛡️ O cerco foi repelido pelas muralhas!",
-                'costly_block': "🧱 Batalha brutal nos muros da cidade!",
-                'pilhage': "🔥 AS MURALHAS CAÍRAM! Pilhagem iniciada!",
-                'complete_destruction': "💥 ANIQUILAÇÃO TOTAL DA CIDADE!"
-            }
-            
-            feedback += f"📢 **COMBATE:** {sit_map.get(sit, 'Confronto inesperado!')}\n"
-            
-            # Se for invasão, mostra dano ou sobrevivência
-            if "is_over" in fd:
-                feedback += f"📉 Perdas Atacante: {int(fd['attacker_loss']*100)}%\n"
-                feedback += f"📉 Perdas Defensor: {int(fd['defender_loss']*100)}%\n"
+            is_invasion = "is_over" in fd
 
-        # 3. Check Final de Vitória/Derrota
-        if game.status != "active":
-            if game.status == "player_won":
-                feedback += "\n🌟 **O REINO INIMIGO CAIU! VOCÊ VENCEU!** 👑"
+            if not is_invasion:
+                feedback += f"\n💥 **CONFLITO EM CAMPO ABERTO!**\n"
+                feedback += f"⚔️ Exército inimigo detectado: *{enemy_army_pre}*\n"
             else:
-                feedback += "\n🔥 **SEU REINO FOI ARRASADO... DERROTA.** 💀"
-            send_message(m.chat_id, feedback, parse_mode="Markdown", reply_markup=ReplyKeyboardRemove())
+                # Identifica quem atacou quem para a narrativa
+                target = "seu reino" if report["ai_action"] == "attack" and actions[m.text] != "attack" else "reino inimigo"
+                feedback += f"\n🏰 **INVASÃO DETECTADA!**\n"
+                feedback += f"Alvo: *{target}*\n"
+                feedback += f"⚔️ Força do inimigo: *{enemy_army_pre}* | ❤️ Vida do inimigo: *{enemy_life_pre}*\n"
+
+            sit_map = {
+                'draw': "⚖️ *Empate!* Ambos os exércitos foram dizimados.",
+                'costly_win': "⚠️ *Vitória sofrida!* Você manteve o campo por pouco.",
+                'true_win': "🏆 *Vitória total!* O inimigo recuou em pânico.",
+                'full_block': "🧱 *Defesa impenetrável!* O ataque não surtiu efeito.",
+                'costly_block': "🩸 *Batalha sangrenta nas muralhas!*",
+                'pilhage': "🔥 *MURALHAS INVADIDAS!* A cidade está sendo saqueada!",
+                'complete_destruction': "💥 *ANIQUILAÇÃO!* A cidade foi reduzida a cinzas!"
+            }
+            feedback += f"📢 **DESFECHO:** {sit_map.get(sit)}\n"
         else:
-            p = game.player
-            feedback += f"\n🍎 {p.food} | 🗡️ {p.army}"
-            send_message(m.chat_id, feedback, parse_mode="Markdown")
+            # Caso não tenha rolado luta (FOG OF WAR)
+            feedback += "\n Nenhuma atividade inimiga detectada nas fronteiras.\n"
+
+        # Envia o feedback sempre, com o teclado principal
+        send_message(m.chat_id, feedback, reply_markup=get_main_keyboard())
+
+        # Check de fim de jogo
+        if game.status != "active":
+            msg = "🏆 **VITÓRIA SUPREMA!**" if game.status == "player_won" else "💀 **DERROTA TOTAL...**"
+            send_message(m.chat_id, msg)
