@@ -1,120 +1,203 @@
 import constants as consts
 
 class Kingdom:
+    '''Representa o estado de um reino, incluindo recursos, construções, exército e vida.'''
     def __init__(self, user_id, user_name, data=None):
+        '''Inicializa o reino com dados pré-existentes ou valores padrão para um novo jogo.'''
         self.user_id = user_id
         self.user_name = user_name
 
         if data:
-            self.life = data['life']
-            self.farms = data['farms']
-            self.food = data['food']
-            self.army = data['army']
-            self.civ = data['civ']
+            self.life = data.get('life', consts.INITIAL_LIFE)
+            self.civ = data.get('civ', 'Teresópolis')
+            
+            # AGRUPAMENTO DE RECURSOS
+            self.resources = data.get('resources', {
+                "food": consts.INITIAL_FOOD,
+                "wood": consts.INITIAL_WOOD,
+            })
+            self.buildings = data.get('buildings', consts.INITIAL_BUILDINGS.copy())
+            self.army = data.get('army', consts.INITIAL_ARMY)
 
         else:
+            # Inicialização para novo jogo
             self.life = consts.INITIAL_LIFE
-            self.farms = consts.INITIAL_FARMS
-            self.food = consts.INITIAL_FOOD
-            self.army = consts.INITIAL_ARMY
             self.civ = 'Teresópolis'
+            self.resources = {
+                "food": consts.INITIAL_FOOD, 
+                "wood": consts.INITIAL_WOOD,
+                }
+            self.buildings = consts.INITIAL_BUILDINGS.copy()
+            self.army = consts.INITIAL_ARMY
+
+    @property
+    def occupied_slots(self):
+        return sum(
+            self.buildings.get(b, 0) * consts.BUILDINGS.get(b, {}).get('slots', 0) 
+            for b in self.buildings
+        )
+
+    @property
+    def total_slots(self):
+        return consts.INITIAL_SLOTS + (self.buildings['casa'] * consts.SLOTS_PER_HOUSE)
+    
+    @property
+    def FARM_PROD_BONUS(self):
+        modifier = consts.CIVS.get(self.civ, {}).get('mods', {}).get('food_production', 1.0)
+        return consts.BUILDINGS['fazenda']['effect_value'] * modifier
+    
+    @property
+    def WOOD_PROD_BONUS(self):
+        modifier = consts.CIVS.get(self.civ, {}).get('mods', {}).get('wood_production', 1.0)
+        return consts.BUILDINGS['serraria']['effect_value'] * modifier
+    
+    @property
+    def ARMY_COST(self):
+        modifier = consts.CIVS.get(self.civ, {}).get('mods', {}).get('army_cost', 1.0)
+        return int(consts.ARMY_COST * modifier)
+
+    @property
+    def WALL_DEFENSE(self):
+        return consts.DEFENSE_PER_WALL * consts.CIVS.get(self.civ, {}).get('mods', {}).get('wall_defense', 1.0)
 
     def to_dict(self):
         """Transforma as informações contidas na instância em um dicionário"""
         return {
             "user_name": self.user_name,
             "life": self.life,
-            "farms": self.farms,
-            "food": self.food,
+            "buildings": self.buildings,
+            "resources": self.resources,
             "army": self.army,
             "civ": self.civ,
         }
     
     def produce_resources(self):
-        """O Recurso aumenta += Farms"""
-        mod = consts.CIVS.get(self.civ, {}).get('mods', {}).get('food_production', 1.0)
-        self.food += int(self.farms*consts.FARM_PROD_BONUS*mod)
+        '''Calcula a produção de recursos com base nas construções e bônus civis, e atualiza os recursos do reino.'''
+        self.resources['food']+= int(self.buildings['fazenda'] * self.FARM_PROD_BONUS)
+        self.resources['wood'] += int(self.buildings['serraria'] * self.WOOD_PROD_BONUS)
 
-    def build_farm(self):
-        if self.food >= consts.FARM_COST:
-            self.food -= consts.FARM_COST
-            self.farms += consts.FARM_PROD_BONUS
+    def build(self, building_type):
+        '''Tenta construir um edifício do tipo especificado, verificando custos, slots e aplicando modificadores civis. Retorna True se a construção for bem-sucedida, ou False caso contrário.'''
+        if building_type not in consts.BUILDINGS:
+            return False
+
+        cost = consts.BUILDINGS[building_type]
+
+        needs_slot = cost.get('slots', 0) > 0
+        if needs_slot and self.occupied_slots >= self.total_slots:
+            return False
+        
+        if (self.resources["food"] >= cost["food_cost"] and
+            self.resources["wood"] >= cost["wood_cost"]):
+
+            self.resources["food"] -= cost["food_cost"]
+            self.resources["wood"] -= cost["wood_cost"]
+            self.buildings[building_type] += 1
             return True
         return False
 
     def train_army(self):
-        """Converte todos os recursos em exército"""
-        if self.food > 0:
-            mod = consts.CIVS.get(self.civ, {}).get('mods', {}).get('army_cost', 1.0)
-            self.army += int(self.food*mod)
-            self.food = 0
+        '''Tenta treinar soldados, verificando o custo total com base na capacidade dos quartéis e aplicando modificadores civis. Retorna True se o treinamento for bem-sucedido, ou False caso contrário.'''
+        # Quantidade máxima que os quarteis aguentam
+        capacidade = int(consts.TRAIN_CAP_PER_QUARTEL * self.buildings['quartel'])
+        custo_total = capacidade * self.ARMY_COST
+    
+        if capacidade > 0 and self.resources["food"] >= custo_total:
+            self.army += capacidade
+            self.resources["food"] -= custo_total
             return True
         return False
 
 class CombatEngine:
+    '''Responsável por resolver os combates entre reinos, aplicando as regras de confronto e gerando relatórios detalhados sobre os resultados.'''
     def __init__(self, attacker, defender):
+        '''Inicializa o motor de combate com os reinos atacante e defensor, e armazena os dados pré-combate para geração de relatórios.'''
         self.attacker = attacker
         self.defender = defender
         # Cache dos dados ANTES do combate para o relatório
         self.stats_pre = {
-            "a_army": attacker.army,
-            "d_army": defender.army,
-            "d_life": defender.life
+            "attacker_army": attacker.army,
+            "defender_army": defender.army,
+            "defender_life": defender.life,
         }
 
     def resolve(self, type="invasion"):
+        ''''Determina o tipo de combate (campo aberto ou invasão) e chama o método correspondente para resolver o confronto. Retorna um relatório detalhado do resultado do combate.'''
         if type == "open_field":
             return self._open_field_clash()
         return self._invasion_clash()
 
     def _open_field_clash(self):
+        '''Resolve um confronto em campo aberto entre o atacante e o defensor, aplicando as regras de combate baseadas na razão entre os exércitos e gerando um relatório detalhado do resultado.'''
+
+        #Identificando o forte e o fraco
         if self.attacker.army >= self.defender.army:
             strong, weak = self.attacker, self.defender
         else:
             strong, weak = self.defender, self.attacker
 
         R = strong.army / max(1, weak.army)
+
+        #Possíveis desfechos do combate
+        if R == 1:
+            s_loss = w_loss = consts.OPEN_BASELOSS
+            sit = 'draw'
         
-        if R <= consts.OPEN_CRITICALRATIO:
+        elif R <= consts.OPEN_CRITICALRATIO:
             s_loss = (consts.OPEN_BASELOSS - consts.OPEN_RESIDUALLOSS) * \
                      (consts.OPEN_CRITICALRATIO**2 - R**2) / (consts.OPEN_CRITICALRATIO**2 - 1) + \
                      consts.OPEN_RESIDUALLOSS
             w_loss = (consts.OPEN_BASELOSS - 1) * (consts.OPEN_CRITICALRATIO**2 - R**2) / \
                      (consts.OPEN_CRITICALRATIO**2 - 1) + 1
-            sit = 'draw' if R == 1 else 'costly_win'
+            sit = 'costly_win'
+
         else:
             s_loss = max(0, consts.OPEN_RESIDUALLOSS * (consts.OPEN_DOMINANCERATIO - R) / \
                      (consts.OPEN_DOMINANCERATIO - consts.OPEN_CRITICALRATIO))
             w_loss = 1.0
             sit = 'true_win'
 
-        # Aplicar baixas
+        # Aplicar as baixas
         strong.army = int(strong.army * (1 - s_loss))
         weak.army = int(weak.army * (1 - w_loss))
 
-        # Identificar perdas específicas para o report (quem é atacante/defensor)
-        if strong == self.attacker:
+        # Determinar o resultado final do combate do ponto de vista do atacante
+        attacker_won = strong == self.attacker
+
+        if sit == 'draw':
+            final_sit = 'draw'
+        elif attacker_won:
+            final_sit = sit # 'costly_win' ou 'true_win'
+        else:
+            # Inverte a narrativa para o ponto de vista do atacante
+            final_sit = 'costly_defeat' if sit == 'costly_win' else 'total_defeat'
+
+        # Identificar perdas específicas
+        if attacker_won:
             a_loss, d_loss = s_loss, w_loss
         else:
+            # Se o defensor (strong) ganhou, a_loss é a perda do fraco
             a_loss, d_loss = w_loss, s_loss
 
-        return self._generate_report(sit, a_loss, d_loss)
+        return self._generate_report(final_sit, a_loss, d_loss)
 
     def _invasion_clash(self):
-        mod_wall = consts.CIVS.get(self.defender.civ, {}).get('mods', {}).get('wall_defense', 1.0)
-        eff_defense = consts.DEFENSE * mod_wall
-        
-        low_t = eff_defense + self.defender.army * consts.SIEGE_LOWBLOCKFACTOR
-        high_t = eff_defense + self.defender.army * consts.SIEGE_HIGHBLOCKFACTOR
+        '''Resolve um confronto de invasão entre o atacante e o defensor, aplicando as regras de combate baseadas na defesa do muro, tamanho dos exércitos e possíveis pilhagens, e gerando um relatório detalhado do resultado.'''
+        DEFENSE = self.defender.buildings.get('muro', 0)*self.defender.WALL_DEFENSE
+        low_t = DEFENSE + self.defender.army * consts.SIEGE_LOWBLOCKFACTOR
+        high_t = DEFENSE + self.defender.army * consts.SIEGE_HIGHBLOCKFACTOR
         
         a_loss, d_loss, sit = 0, 0, ""
 
+        #Fase de cerco: o muro absorve o impacto inicial, podendo causar perdas para o atacante, ou até mesmo permitir uma vitória completa se o atacante for suficientemente forte.
         if self.attacker.army <= low_t:
             a_loss, d_loss, sit = consts.SIEGE_ATTACKERLOSS, 0, 'full_block'
         elif self.attacker.army < high_t:
             a_loss = consts.SIEGE_ATTACKERLOSS * (high_t - self.attacker.army) / (high_t - low_t)
             d_loss = consts.SIEGE_BLOCKLOSS * (self.attacker.army - low_t) / (high_t - low_t)
             sit = 'costly_block'
+
+        #Fase de pilhagem: se o atacante conseguir romper o bloqueio do muro, ele pode causar danos ao defensor. Se o atacante for apenas moderadamente mais forte, ele causará danos limitados (pilhagem). Se for muito mais forte, ele destruirá completamente o defensor.
         else:
             if self.defender.army > 0 and (self.attacker.army / self.defender.army) < consts.PILHAGE_DOMINANCERATIO:
                 a_loss, d_loss = consts.PILHAGE_BASELOSS, consts.PILHAGE_BASELOSS
@@ -132,15 +215,19 @@ class CombatEngine:
         return self._generate_report(sit, a_loss, d_loss, is_invasion=True)
 
     def _generate_report(self, situation, a_loss, d_loss, is_invasion=False):
+        '''Gera um relatório detalhado do combate, incluindo a situação final, perdas para ambos os lados e, no caso de invasão, o impacto na vida do defensor. Retorna um dicionário com todas as informações relevantes para análise posterior.'''
         report = {
             "situation": situation,
-            "attacker_start_army": self.stats_pre["a_army"],
-            "defender_start_army": self.stats_pre["d_army"],
-            "defender_start_life": self.stats_pre["d_life"],
+            "attacker_start_army": self.stats_pre["attacker_army"],
+            "defender_start_army": self.stats_pre["defender_army"],
+            "defender_start_life": self.stats_pre["defender_life"],
+            "defender_damage_taken": self.stats_pre["defender_life"] - self.defender.life if is_invasion else 0,
             "attacker_loss": a_loss,
-            "defender_loss": d_loss
+            "defender_loss": d_loss,
+            "is_invasion": is_invasion,
         }
         if is_invasion: 
+            '''Em combates de invasão, o relatório também inclui se o defensor foi derrotado (vida <= 0) e a vida final do defensor após o combate.'''
             report["is_over"] = self.defender.life <= 0
             report["defender_final_life"] = self.defender.life
         return report

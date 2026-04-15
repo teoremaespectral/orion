@@ -16,7 +16,7 @@ send_video_note = my_bot.sendVideoNote
 def send_message(chat_id, text, reply_markup=None):
     return my_bot.sendMessage(chat_id, text, reply_markup=reply_markup, parse_mode='Markdown')
 
-# --- TECLADOS ---
+# --- TECLADOS DINÂMICOS ---
 
 def get_civ_keyboard():
     keys = []
@@ -34,9 +34,26 @@ def get_strategy_keyboard():
 
 def get_main_keyboard():
     return ReplyKeyboardMarkup(keyboard=[
-        [KeyboardButton(text="🌱 Criar Fazenda"), KeyboardButton(text="⚔️ Treinar Exército")],
+        [KeyboardButton(text="🏗️ Construções"), KeyboardButton(text="⚔️ Treinar Exército")],
         [KeyboardButton(text="😈 ATACAR"), KeyboardButton(text="📊 Status")]
     ], resize_keyboard=True)
+
+def get_build_keyboard(player):
+    keys = []
+    for b_id, info in consts.BUILDINGS.items():
+        # Lógica de "Botão Escuro/Bloqueado"
+        can_build = (player.resources['food'] >= info['food_cost'] and 
+                     player.resources['wood'] >= info['wood_cost'])
+        
+        if info.get('slots', 0) > 0 and player.occupied_slots >= player.total_slots:
+            can_build = False
+
+        icon = "🔨" if can_build else "🚫"
+        label = f"{icon} {info['label']} (🍎{info['food_cost']} 🪵{info['wood_cost']})"
+        keys.append([KeyboardButton(text=label)])
+    
+    keys.append([KeyboardButton(text="🔙 Voltar")])
+    return ReplyKeyboardMarkup(keyboard=keys, resize_keyboard=True)
 
 user_setup = {}
 handlers = []
@@ -87,6 +104,21 @@ def handle_setup_flow(m: M):
 # --- ACTIONS ---
 
 @handlers.append
+def handle_menu_navigation(m: M):
+    game = Game(m.user_id, m.user_name)
+    
+    # 1. ENTRAR NO MENU DE CONSTRUÇÃO
+    if m.text == "🏗️ Construções":
+        texto = txt.BUILD_MENU_MSG(game.player)
+        send_message(m.chat_id, texto, reply_markup=get_build_keyboard(game.player))
+        return True
+
+    # 2. VOLTAR AO MENU PRINCIPAL
+    if m.text == "🔙 Voltar":
+        send_message(m.chat_id, "Retornando ao conselho real...", reply_markup=get_main_keyboard())
+        return True
+
+@handlers.append
 def show_status(m: M):
     if m.command == "/status" or m.text == "📊 Status":
         game = Game(m.user_id, m.user_name)
@@ -97,27 +129,53 @@ def show_status(m: M):
 
 @handlers.append
 def handle_actions(m: M):
-    actions = {"🌱 Criar Fazenda": "farm", "⚔️ Treinar Exército": "army", "😈 ATACAR": "attack"}
-    if m.text in actions:
-        game = Game(m.user_id, m.user_name)
-        #Checando se há um jogo ativo antes de processar a ação
-        if game.status != "active":
-            texto = txt.NO_ACTIVE_GAME
-            send_message(m.chat_id, texto)
-            return
+    game = Game(m.user_id, m.user_name)
+    if game.status != "active": return
 
-        #Gerenciando turno
+    action = {"type": None, "target": None}
 
-        report = game.play_turn(actions[m.text])
+    # IDENTIFICAR AÇÃO POR DICIONÁRIO
+    if "Treinar Exército" in m.text:
+        action = {"type": "army", "target": None}
+    elif "ATACAR" in m.text:
+        action = {"type": "attack", "target": "invasion"} # Padrão v1.2
+    elif "🔨" in m.text or "🚫" in m.text:
+        # Extrair o nome da construção do texto do botão
+        for b_id, info in consts.BUILDINGS.items():
+            if info['label'] in m.text:
+                action = {"type": "build", "target": b_id}
+                break
 
-        feedback = txt.TURN_REPORT_INTRODUCTION(game.turn_count)
-        feedback += txt.ACTION_FEEDBACK(report)
-        if report["fight_data"] is not None:
-            feedback += txt.FIGHT_FEEDBACK(report)
+    if action["type"]:
+        report = game.play_turn(action) # Executa o turno completo
+        
+        # 1. Cabeçalho do Turno
+        full_report = txt.TURN_REPORT_INTRODUCTION(game.turn_count - 1)
+        
+        # 2. Feedback da sua ação (O que você já tinha)
+        full_report += txt.ACTION_FEEDBACK(report) + "\n"
+        
+        # 3. Feedback da IA (Opcional: você quer que o jogador saiba o que a IA fez?)
+        # Se quiser esconder a IA para dar mistério, pule esta parte.
+        if report['ai_action']['success']:
+            ai_raw_target = report['ai_action']['target']
+            ai_type = report['ai_action']['type']
+            
+            if ai_type == 'army':
+                detalhe = "recrutando novos soldados ⚔️"
+            elif ai_type == 'build':
+                # Busca o nome bonitinho da construção no constants.py
+                label = consts.BUILDINGS.get(ai_raw_target, {}).get('label', ai_raw_target)
+                detalhe = f"construindo {label} 🏗️"
+            else:
+                detalhe = "planejando uma ofensiva 🚩"
+                
+            full_report += f"🕵️ **Espiões relatam:** Inimigo foi visto {detalhe}.\n"
 
-        send_message(m.chat_id, feedback, reply_markup=get_main_keyboard())
+        # 4. Feedback de Combate (Se houve luta)
+        if report.get("fight_data"):
+            full_report += txt.FIGHT_FEEDBACK(report)
+            pass
 
-        # Check de fim de jogo
-        if game.status != "active":
-            text = txt.VICTORY if game.status == "player_won" else txt.FAILURE
-            send_message(m.chat_id, text, reply_markup=ReplyKeyboardRemove())
+        # 5. Envia tudo em uma única mensagem elegante
+        send_message(m.chat_id, full_report, reply_markup=get_main_keyboard())
