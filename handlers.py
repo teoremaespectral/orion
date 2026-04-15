@@ -119,5 +119,5 @@ def handle_actions(m: M):
 
         # Check de fim de jogo
         if game.status != "active":
-            msg = txt.VICTORY if game.status == "player_won" else txt.FAILURE
-            send_message(m.chat_id, msg)
+            text = txt.VICTORY if game.status == "player_won" else txt.FAILURE
+            send_message(m.chat_id, text, reply_markup=ReplyKeyboardRemove())
