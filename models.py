@@ -6,48 +6,97 @@ class Kingdom:
         self.user_name = user_name
 
         if data:
-            self.life = data['life']
-            self.farms = data['farms']
-            self.food = data['food']
-            self.army = data['army']
-            self.civ = data['civ']
+            self.life = data.get('life', consts.INITIAL_LIFE)
+            self.civ = data.get('civ', 'Teresópolis')
+            
+            # AGRUPAMENTO DE RECURSOS
+            self.resources = data.get('resources', {
+                "food": consts.INITIAL_FOOD,
+                "wood": consts.INITIAL_WOOD,
+            })
+            self.buildings = data.get('buildings', consts.INITIAL_BUILDINGS.copy())
+            self.army = data.get('army', consts.INITIAL_ARMY)
 
         else:
+            # Inicialização para novo jogo
             self.life = consts.INITIAL_LIFE
-            self.farms = consts.INITIAL_FARMS
-            self.food = consts.INITIAL_FOOD
-            self.army = consts.INITIAL_ARMY
             self.civ = 'Teresópolis'
+            self.resources = {
+                "food": consts.INITIAL_FOOD, 
+                "wood": consts.INITIAL_WOOD,
+                }
+            self.buildings = consts.INITIAL_BUILDINGS.copy()
+            self.army = consts.INITIAL_ARMY
+
+    @property
+    def occupied_slots(self):
+        return sum(
+            self.buildings.get(b, 0) * consts.BUILDINGS.get(b, {}).get('slots', 0) 
+            for b in self.buildings
+        )
+
+    @property
+    def total_slots(self):
+        return consts.INITIAL_SLOTS + (self.buildings['casa'] * consts.SLOTS_PER_HOUSE)
+    
+    @property
+    def FARM_PROD_BONUS(self):
+        modifier = consts.CIVS.get(self.civ, {}).get('mods', {}).get('food_production', 1.0)
+        return consts.BUILDINGS['fazenda']['effect_value'] * modifier
+    
+    @property
+    def WOOD_PROD_BONUS(self):
+        modifier = consts.CIVS.get(self.civ, {}).get('mods', {}).get('wood_production', 1.0)
+        return consts.BUILDINGS['serraria']['effect_value'] * modifier
+    
+    @property
+    def ARMY_COST(self):
+        modifier = consts.CIVS.get(self.civ, {}).get('mods', {}).get('army_cost', 1.0)
+        return int(consts.ARMY_COST * modifier)
 
     def to_dict(self):
         """Transforma as informações contidas na instância em um dicionário"""
         return {
             "user_name": self.user_name,
             "life": self.life,
-            "farms": self.farms,
-            "food": self.food,
+            "buildings": self.buildings,
+            "resources": self.resources,
             "army": self.army,
             "civ": self.civ,
         }
     
     def produce_resources(self):
         """O Recurso aumenta += Farms"""
-        mod = consts.CIVS.get(self.civ, {}).get('mods', {}).get('food_production', 1.0)
-        self.food += int(self.farms*consts.FARM_PROD_BONUS*mod)
+        self.resources['food']+= int(self.buildings['fazenda'] * self.FARM_PROD_BONUS)
+        self.resources['wood'] += int(self.buildings['serraria'] * self.WOOD_PROD_BONUS)
 
-    def build_farm(self):
-        if self.food >= consts.FARM_COST:
-            self.food -= consts.FARM_COST
-            self.farms += consts.FARM_PROD_BONUS
+    def build(self, building_type):
+        if building_type not in consts.BUILDINGS:
+            return False
+
+        cost = consts.BUILDINGS[building_type]
+
+        needs_slot = cost.get('slots', 0) > 0
+        if needs_slot and self.occupied_slots >= self.total_slots:
+            return False
+        
+        if (self.resources["food"] >= cost["food_cost"] and
+            self.resources["wood"] >= cost["wood_cost"]):
+
+            self.resources["food"] -= cost["food_cost"]
+            self.resources["wood"] -= cost["wood_cost"]
+            self.buildings[building_type] += 1
             return True
         return False
 
     def train_army(self):
-        """Converte todos os recursos em exército"""
-        if self.food > 0:
-            mod = consts.CIVS.get(self.civ, {}).get('mods', {}).get('army_cost', 1.0)
-            self.army += int(self.food*mod)
-            self.food = 0
+        # Quantidade máxima que os quarteis aguentam
+        capacidade = int(consts.TRAIN_CAP_PER_QUARTEL * self.buildings['quartel'])
+        custo_total = capacidade * self.ARMY_COST
+    
+        if capacidade > 0 and self.resources["food"] >= custo_total:
+            self.army += capacidade
+            self.resources["food"] -= custo_total
             return True
         return False
 

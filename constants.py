@@ -8,9 +8,9 @@ CIVS = {
     },
     "Petrópolis": {
         "label": "Petrópolis 🏰",
-        "bonus": "Tropas Reais: Treinamento gera 20% mais soldados com a mesma comida.",
+        "bonus": "Tropas Reais: Soldados são 20% mais baratos.",
         "mods": {
-            "army_cost": 1.2,
+            "army_cost": 0.8,
         }
     },
     "Volta Redonda": {
@@ -30,13 +30,64 @@ CIVS = {
 }
 
 INITIAL_LIFE = 200
-INITIAL_FARMS = 1
 INITIAL_FOOD = 5
+INITIAL_WOOD = 10
 INITIAL_ARMY = 0
+INITIAL_BUILDINGS = {
+    'casa' : 1,
+    'fazenda' : 1,
+    'serraria' : 0,
+    'quartel' : 0,
+    'muro' : 5,
+}
 
-FARM_COST = 5
-FARM_PROD_BONUS = 5
-DEFENSE = 25
+DEFENSE_PER_WALL = 5
+TRAIN_CAP_PER_QUARTEL = 5
+SLOTS_PER_HOUSE = 3
+ARMY_COST = 1
+
+BUILDINGS = {
+    "casa": {
+        "label": "🏠 Casa",
+        "wood_cost": 5,
+        "food_cost": 0,
+        "description": f"Expande a vila. Libera +{SLOTS_PER_HOUSE} slots de construção.",
+        "effect_value": SLOTS_PER_HOUSE,
+        "slots": 0,
+    },
+    "fazenda": {
+        "label": "🌱 Fazenda",
+        "wood_cost": 0,
+        "food_cost": 5,
+        "description": "Garante o sustento. Produz comida a cada turno.",
+        "effect_value": 5,
+        "slots": 1,
+    },
+    "serraria": {
+        "label": "🪚 Serraria",
+        "wood_cost": 5,
+        "food_cost": 0,
+        "description": "Essencial para obras. Produz madeira a cada turno.",
+        "effect_value": 2,
+        "slots": 1,
+    },
+    "muro": {
+        "label": "🧱 Muro",
+        "wood_cost": 20,
+        "food_cost": 0,
+        "description": f"Proteção física. Aumenta a defesa base em +{DEFENSE_PER_WALL}.",
+        "effect_value": DEFENSE_PER_WALL,
+        "slots": 0,
+    },
+    "quartel": {
+        "label": "⚔️ Quartel",
+        "wood_cost": 5,
+        "food_cost": 0,
+        "description": f"Treinamento militar. Permite treinar até {TRAIN_CAP_PER_QUARTEL} soldados por turno.",
+        "effect_value": TRAIN_CAP_PER_QUARTEL,
+        "slots": 1,
+    }
+}
 
 OPEN_BASELOSS = 0.7
 OPEN_RESIDUALLOSS = 0.2
