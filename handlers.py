@@ -147,12 +147,23 @@ def handle_actions(m: M):
                 break
 
     if action["type"]:
-        report = game.play_turn(action) # Enviando o dicionário!
+        report = game.play_turn(action) # Executa o turno completo
         
-        # Feedback visual
-        feedback = txt.ACTION_FEEDBACK(report)
-        # Se houve luta, anexa o relatório de combate
+        # 1. Cabeçalho do Turno
+        full_report = txt.TURN_REPORT_INTRODUCTION(game.turn_count - 1)
+        
+        # 2. Feedback da sua ação (O que você já tinha)
+        full_report += txt.ACTION_FEEDBACK(report) + "\n"
+        
+        # 3. Feedback da IA (Opcional: você quer que o jogador saiba o que a IA fez?)
+        # Se quiser esconder a IA para dar mistério, pule esta parte.
+        if report['ai_action']['success']:
+            ai_act = report['ai_action']['target'] or "treinou exército"
+            full_report += f"🕵️ **Espiões relatam:** Inimigo agiu em {ai_act}.\n"
+
+        # 4. Feedback de Combate (Se houve luta)
         if report.get("fight_data"):
-            feedback += txt.FIGHT_FEEDBACK(report)
-            
-        send_message(m.chat_id, feedback, reply_markup=get_main_keyboard())
+            full_report += txt.FIGHT_FEEDBACK(report)
+
+        # 5. Envia tudo em uma única mensagem elegante
+        send_message(m.chat_id, full_report, reply_markup=get_main_keyboard())

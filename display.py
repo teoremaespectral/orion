@@ -24,15 +24,27 @@ def BUILD_MENU_MSG(player):
     return texto
 
 def STATUS_MSG(player, turn):
+    # Cálculo de bônus de civ para exibir no status (opcional, mas ajuda o jogador)
+    bonus_text = ""
+    if player.civ == "Teresópolis": bonus_text = " (Montanhas 🏔️)"
+    elif player.civ == "Volta Redonda": bonus_text = " (Fábricas 🏭)"
+
     texto = (
-        f"👑 **STATUS DO REINO DE {player.user_name}**\n"
-        f"Civilização: *{c.CIVS[player.civ]['label']}*\n"
-        f"❤️ Vida: {player.life}\n"
+        f"👑 **REINO DE {player.user_name}**\n"
+        f"🏛️ Civilização: *{c.CIVS[player.civ]['label']}*\n"
+        f"📅 Turno: {turn}\n"
+        f"────────────────────\n"
+        f"❤️ Integridade: {player.life}/200\n"
+        f"⚔️ Força Militar: {player.army} soldados\n"
+        f"🧱 Defesa (Muros): {player.buildings.get('muro', 0)}\n"
+        f"────────────────────\n"
         f"🍎 Comida: {player.resources['food']}\n"
         f"🪵 Madeira: {player.resources['wood']}\n"
-        f"⚔️ Exército: {player.army}\n"
-        f"🏘️ Slots: {player.occupied_slots}/{player.total_slots}\n"
-        f"📅 Turno: {turn}\n"
+        f"🏘️ Espaço: {player.occupied_slots}/{player.total_slots}\n"
+        f"────────────────────\n"
+        f"🏠 Casas: {player.buildings.get('casa', 0)} | "
+        f"🌱 Fazendas: {player.buildings.get('fazenda', 0)} | "
+        f"🪚 Serrarias: {player.buildings.get('serraria', 0)}"
     )
     return texto
 
@@ -82,6 +94,8 @@ def FIGHT_FEEDBACK(report):
         'draw': "⚖️ *Empate!* Ambos os exércitos foram dizimados.",
         'costly_win': "⚠️ *Vitória sofrida!* Você manteve o campo por pouco.",
         'true_win': "🏆 *Vitória total!* O inimigo recuou em pânico.",
+        'costly_defeat': "❌ *Derrota amarga!* Suas tropas recuaram.", # ADICIONAR
+        'total_defeat': "💀 *Massacre!* Seu exército foi aniquilado.", # ADICIONAR
         'full_block': "🛡️ *Defesa impenetrável!* O ataque não surtiu efeito.",
         'costly_block': "🩸 *Batalha sangrenta nas muralhas!*",
         'pilhage': "🔥 *MURALHAS INVADIDAS!* A cidade está sendo saqueada!",

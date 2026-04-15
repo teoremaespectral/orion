@@ -20,6 +20,7 @@ class Game:
             self.status = "active"
             self.ai_strategy = choice(['dumb', 'rusher', 'turtle', 'greedy'])
             # NOVA FILA DE TÁTICAS
+            self.ai_plan_type = None
             self.ai_current_plan = [] 
             
             self.player = Kingdom(self.user_id, user_name)
@@ -30,6 +31,7 @@ class Game:
             self.status = user_data.get('status', 'active')
             self.ai_strategy = user_data.get('ai_strategy', 'dumb')
             # RECUPERA A FILA DO BANCO
+            self.ai_plan_type = user_data.get('ai_plan_type', None)
             self.ai_current_plan = user_data.get('ai_current_plan', [])
             
             self.player = Kingdom(self.user_id, user_name, data=user_data)
@@ -42,11 +44,13 @@ class Game:
         player_data['status'] = self.status
         player_data['ai_strategy'] = self.ai_strategy
         # SALVA A FILA ATUAL
+        player_data['ai_plan_type'] = self.ai_plan_type
         player_data['ai_current_plan'] = self.ai_current_plan
 
         self.db_data[self.user_id] = player_data
         self.db_data[f"{self.user_id}_ai"] = self.ai.to_dict()
-        save_db('games_data', self.db_data)
+        print(f"Salvando jogo para {self.user_name} (Turno {self.turn_count}, Status: {self.status})")
+        save_db(self.db_data, 'games_data')
 
     def setup(self, player_civ="Teresópolis", ai_civ="Petrópolis", strategy="Aleatório"):
         '''Configura o jogo para um novo usuário, definindo as civilizações do jogador e da IA, bem como a estratégia da IA. Garante que os reinos sejam criados com os bônus e modificadores corretos de acordo com as civilizações escolhidas. Salva o estado inicial do jogo no banco de dados.'''
@@ -59,6 +63,7 @@ class Game:
     
         self.turn_count = 1
         self.status = "active"
+        self.ai_current_plan = []
     
         # Tratamento da estratégia
         if strategy == "Aleatório":
@@ -127,17 +132,19 @@ class Game:
         para a AI_logic baseado na estratégia.
         """
         # 1. Se não há plano, consulta a estratégia para gerar uma sequência (lista)
+        
         if not self.ai_current_plan:
             # Chama a função principal do AI_logic que redireciona para a estratégia correta
-            new_sequence = AI_logic.get_ai_tactic(self.ai_strategy, self.ai)
-            self.ai_current_plan = new_sequence
+            plan_type, new_plan = AI_logic.get_ai_tactic(self.ai_strategy, self.ai)
+            self.ai_plan_type = plan_type
+            self.ai_current_plan = new_plan
 
         # 2. Retira a primeira ação da fila (FIFO)
         # Cada item da sequência é algo como: ['build', 'casa'] ou ['army', 'train_army']
         current_step = self.ai_current_plan.pop(0)
         
-        a_type = current_step[0]
-        a_target = current_step[1] if len(current_step) > 1 else None
+        a_type = self.ai_plan_type
+        a_target = current_step
 
         ai_action = {
             'type': a_type, 

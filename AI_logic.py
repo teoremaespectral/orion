@@ -16,9 +16,9 @@ def needs_slots(ai, amount = c.FEW_SLOTS):
     ''' Se os slots estiverem quase todos ocupados, é necessário construir mais casas. '''
     return (ai.total_slots - ai.occupied_slots) <= amount
 
-def has_few_barracks(ai):
+def has_few_barracks(ai, amount = c.FEW_BARRACKS):
     ''' Se o número de quartéis for baixo, é um sinal de alerta para construir mais quartéis. '''
-    return is_too_little(ai.buildings['quartel']*c.TRAIN_CAP_PER_QUARTEL, ai.resources['food']) 
+    return ai.buildings['quartel'] < amount 
 
 def has_little_army(ai, amount = c.FEW_ARMY):
     ''' Se o exército estiver abaixo de amount, é um sinal de alerta para treinar mais soldados. '''
@@ -101,8 +101,8 @@ def get_tactic_sequence(category, tactic_name):
     
     # Busca a categoria, depois a tática. Se não achar, retorna uma lista padrão segura.
     tactic_dict = categories.get(category, BUILD_TACTICS)
-    sequence = choice(tactic_dict.get(tactic_name, [["casa"]]))
-    return sequence
+    sequence = choice(tactic_dict.get(tactic_name, [["casa"]])).copy()
+    return category, sequence
 
 def dumb_strategy(ai):
     ''' Uma estratégia "burra" que prioriza a construção de casas quando os slots estão baixos, depois serrarias se a madeira estiver baixa, e depois escolhe aleatoriamente entre construir, treinar ou atacar. '''
@@ -128,11 +128,11 @@ def rusher_strategy(ai):
     '''Uma estratégia agressiva que prioriza o ataque constante, mas ainda tenta manter um mínimo de exército e economia para sustentar a ofensiva. '''
 
     if has_little_army(ai):
-        if needs_wood(ai):
-            return get_tactic_sequence('build', 'make_some_sawmills')
-    
         if needs_slots(ai):
             return get_tactic_sequence('build', 'make_a_house')
+        
+        if needs_wood(ai):
+            return get_tactic_sequence('build', 'make_some_sawmills')
     
         if needs_food(ai):
             return get_tactic_sequence('build', 'make_some_farms')
@@ -164,11 +164,10 @@ def turtle_strategy(ai):
     '''Uma estratégia defensiva que prioriza a construção de defesas e o fortalecimento do exército antes de considerar ataques.'''
 
     if has_little_army(ai, c.MUCH_ARMY):
-        if needs_wood(ai, c.MUCH_WOOD):
-            return get_tactic_sequence('build', 'make_some_sawmills')
-    
         if needs_slots(ai):
             return get_tactic_sequence('build', 'make_a_house')
+        if needs_wood(ai, c.MUCH_WOOD):
+            return get_tactic_sequence('build', 'make_some_sawmills')
     
         if needs_food(ai):
             return get_tactic_sequence('build', 'make_some_farms')
@@ -182,7 +181,7 @@ def turtle_strategy(ai):
         tactic_type, tactic_name = choice([
             ['build','make_some_barracks'], 
             ['army','train_some_soldiers'],
-            ['army', 'train_lots_of_soldiers'],
+            ['army','train_lots_of_soldiers'],
             ])
         return get_tactic_sequence(tactic_type, tactic_name)
     
@@ -240,6 +239,7 @@ def greedy_strategy(ai):
             ['army','train_some_soldiers'],
             ['army','train_lots_of_soldiers'],
             ])
+        return get_tactic_sequence(tactic_type, tactic_name)
     
     else:
         

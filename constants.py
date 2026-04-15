@@ -30,8 +30,8 @@ CIVS = {
 }
 
 INITIAL_LIFE = 200
-INITIAL_FOOD = 5
-INITIAL_WOOD = 10
+INITIAL_FOOD = 15
+INITIAL_WOOD = 25
 INITIAL_ARMY = 0
 INITIAL_BUILDINGS = {
     'casa' : 1,
@@ -40,13 +40,14 @@ INITIAL_BUILDINGS = {
     'quartel' : 0,
     'muro' : 5,
 }
+INITIAL_SLOTS = 0
 
 DEFENSE_PER_WALL = 5
 TRAIN_CAP_PER_QUARTEL = 5
 SLOTS_PER_HOUSE = 3
 ARMY_COST = 1
 
-FEW_WOOD = 15
+FEW_WOOD = 25
 MUCH_WOOD = 40
 LOTS_OF_WOOD = 80
 FEW_FOOD = 15
@@ -54,6 +55,8 @@ MUCH_FOOD = 40
 LOTS_OF_FOOD = 80
 FEW_SLOTS = 3
 MUCH_SLOTS = 10
+FEW_BARRACKS = 2
+MUCH_BARRACKS = 5
 FEW_ARMY = 10
 MUCH_ARMY = 30
 LOTS_OF_ARMY = 100
@@ -83,7 +86,7 @@ BUILDINGS = {
         "wood_cost": 5,
         "food_cost": 0,
         "description": "Essencial para obras. Produz madeira a cada turno.",
-        "effect_value": 2,
+        "effect_value": 4,
         "slots": 1,
     },
     "muro": {
