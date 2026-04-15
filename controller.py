@@ -1,4 +1,4 @@
-from models import Kingdom
+from models import Kingdom, CombatEngine
 from db_utils import get_db, save_db
 import constants as consts
 import AI_logic
@@ -126,14 +126,20 @@ class Game:
 
     def process_fight(self, player_action, ai_action):
         """Simulação de combate"""
-        if player_action == "attack" and ai_action == "attack": #Confronto de exércitos
-            return self.openfield_clash()
-
-        elif player_action == "attack": #Se o jogador é o atacante
-            return self.invasion_clash(initiative='player')
-
+        if player_action == "attack" and ai_action == "attack":
+            # Caso 1: Ambos atacam -> Campo Aberto
+            engine = CombatEngine(self.player, self.ai)
+            return engine.resolve(type="open_field")
+            
+        elif player_action == "attack":
+            # Caso 2: Só jogador ataca -> Invasão à IA
+            engine = CombatEngine(self.player, self.ai)
+            return engine.resolve(type="invasion")
+            
         elif ai_action == "attack":
-            return self.invasion_clash(initiative='ai')
+            # Caso 3: Só IA ataca -> Invasão ao Jogador
+            engine = CombatEngine(self.ai, self.player)
+            return engine.resolve(type="invasion")
 
         return None
     
@@ -143,104 +149,3 @@ class Game:
         elif self.ai.life <= 0:
             self.status = "player_won"
         return
-    
-    def openfield_clash(self):
-
-        if self.player.army >= self.ai.army:
-            strong, weak = self.player, self.ai
-        else:
-            strong, weak = self.ai, self.player
-
-        R = strong.army/weak.army
-
-        BASELOSS = consts.OPEN_BASELOSS
-        RESIDUALLOSS = consts.OPEN_RESIDUALLOSS
-        CRITICAL = consts.OPEN_CRITICALRATIO
-        DOMINANCE = consts.OPEN_DOMINANCERATIO
-
-        if R <= CRITICAL:
-            strong_loss = (BASELOSS - RESIDUALLOSS)*(CRITICAL**2 - R**2)/(CRITICAL**2 - 1) + RESIDUALLOSS
-            weak_loss = (BASELOSS - 1)*(CRITICAL**2 - R**2)/(CRITICAL**2 - 1) + 1
-            situation = 'costly_win'
-
-        else:
-            strong_loss = max(0, RESIDUALLOSS*(DOMINANCE - R)/(DOMINANCE - CRITICAL))
-            weak_loss = 1
-            situation = 'true_win'
-
-        if R == 1:
-            situation = 'draw'
-
-        strong.army = int(strong.army*(1-strong_loss))
-        weak.army = int(weak.army*(1-weak_loss))
-
-        return {
-            "winner" : strong,
-            "situation": situation,
-            "winner_final_army" : strong.army, 
-            "winner_loss" : strong_loss,
-            "weak_final_army" : weak.army,
-            "weak_loss" : weak_loss
-            }
-        
-
-
-    def invasion_clash(self, initiative):
-        
-        if initiative == 'player':
-            attacker, defender = self.player, self.ai
-        else:
-            attacker, defender = self.ai, self.player
-
-        attacker_start_army = attacker.army
-        defender_start_army = defender.army
-
-        #Fase 1: Cerco
-        mod = consts.CIVS.get(defender.civ, {}).get('mods', {}).get('wall_defense', 1.0)
-        city_defense = consts.DEFENSE*mod
-        LOW_THRESHOLD = city_defense + defender.army*consts.SIEGE_LOWBLOCKFACTOR
-        HIGH_THRESHOLD = city_defense + defender.army*consts.SIEGE_HIGHBLOCKFACTOR
-        situation = None
-
-        if attacker.army <= LOW_THRESHOLD:
-            attacker_loss = consts.SIEGE_ATTACKERLOSS
-            defender_loss = 0
-            situation = 'full_block'
-        
-        elif attacker.army < HIGH_THRESHOLD:
-            attacker_loss = consts.SIEGE_ATTACKERLOSS*(HIGH_THRESHOLD - attacker.army)/(HIGH_THRESHOLD - LOW_THRESHOLD)
-            defender_loss = consts.SIEGE_BLOCKLOSS*(attacker.army - LOW_THRESHOLD)/(HIGH_THRESHOLD - LOW_THRESHOLD)
-            situation = 'costly_block'
-
-        #Fase 2: Pilhagem
-
-        else:
-
-            if defender.army != 0 and attacker.army/defender.army < consts.PILHAGE_DOMINANCERATIO:
-                attacker_loss = consts.PILHAGE_BASELOSS
-                defender_loss = consts.PILHAGE_BASELOSS
-                mod = consts.CIVS.get(defender.civ, {}).get('mods', {}).get('pilhage_damage', 1.0)
-                defender.life = int(max(0, defender.life - consts.PILHAGE_DAMAGEFACTOR*attacker.army*(1-attacker_loss)*mod))
-                situation = 'pilhage'
-
-            else:
-                attacker_loss = 0
-                defender_loss = 1
-                defender.life = 0
-                situation = 'complete_destruction'
-        
-        defender_is_alive = (defender.life != 0)
-        attacker.army = int(attacker.army*(1-attacker_loss))
-        defender.army = int(defender.army*(1-defender_loss))
-
-
-        return {
-            "situation" : situation,
-            "is_over" : not defender_is_alive,
-            "attacker_start_army" : attacker_start_army,
-            "attacker_final_army" : attacker.army, 
-            "attacker_loss" : attacker_loss,
-            "defender_start_army" : defender_start_army,
-            "defender_final_army" : defender.army,
-            "defender_loss" : defender_loss
-        }
