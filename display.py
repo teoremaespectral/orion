@@ -27,12 +27,20 @@ def WAR_START(p_civ, a_civ, strategy):
     return texto
 
 def BUILD_MENU_MSG(player):
+    # Cabeçalho padrão
     texto = (
         "🏗️ **CANTEIRO DE OBRAS**\n\n"
-        f"Recursos: 🍎 {player.resources['food']} | 🪵 {player.resources['wood']}\n"
-        f"Espaço: 🏘️ {player.occupied_slots}/{player.total_slots}\n\n"
-        "Escolha o que deseja edificar:"
+        f"Recursos: 🍎 {player.resources['food']} | 🪵 {player.resources['wood']} | 💰 {player.resources.get('gold', 0)}\n"
+        f"Espaço: 🏘️ {player.occupied_slots}/{player.total_slots}\n"
+        "────────────────────\n"
     )
+
+    # Loop para listar cada construção e seu efeito
+    for b_id, info in c.BUILDINGS.items():
+        texto += f"*{info['label']}*\n"
+        texto += f"└ {info['description']}\n\n"
+
+    texto += "Escolha o que deseja edificar:"
     return texto
 
 def STATUS_MSG(player, turn):
