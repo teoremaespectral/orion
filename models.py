@@ -113,6 +113,30 @@ class Kingdom:
             self.resources["food"] -= custo_total
             return True
         return False
+
+    def research(self, tech_id):
+        '''
+        Tenta pesquisar uma tecnologia. Verifica requisitos, desconta o ouro 
+        e aplica os modificadores permanentemente ao reino.
+        Retorna True se a pesquisa foi concluída, False caso contrário.
+        '''
+        # 1. Usamos o can_research que você criou para validar a transação
+        if not self.can_research(tech_id):
+            return False
+
+        tech_data = consts.TECHNOLOGIES[tech_id]
+
+        # 2. Descontar o custo de ouro
+        self.resources['gold'] -= tech_data.get('gold_cost', 0)
+
+        # 3. Adicionar à lista de tecnologias conhecidas
+        self.searched_techs.append(tech_id)
+
+        # 4. Aplicar modificadores (Se houver)
+        # Nota: A aplicação real dos modificadores (como army_cost) deve ser 
+        # refletida nas @properties que você já tem (como self.ARMY_COST).
+
+        return True
     
     def can_build(self, building_type):
         '''Verifica se o reino tem recursos e slots suficientes para construir um edifício do tipo especificado. Retorna True se for possível construir, ou False caso contrário.'''
