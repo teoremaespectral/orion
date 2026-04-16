@@ -117,6 +117,9 @@ class Game:
         if a_type == "build":
             if self.player.build(a_target):
                 action['success'] = True
+        elif a_type == "research":
+            if self.player.research(a_target):
+                action['success'] = True
         elif a_type == "army":
             if self.player.train_army():
                 action['success'] = True
@@ -157,6 +160,9 @@ class Game:
         if a_type == "build":
             if self.ai.build(a_target):
                 ai_action['success'] = True
+        elif a_type == "research":
+            if self.ai.research(a_target):
+                ai_action['success'] = True
         elif a_type == "army":
             if self.ai.train_army():
                 ai_action['success'] = True
@@ -165,10 +171,14 @@ class Game:
             if self.ai.army > 0:
                 ai_action['success'] = True
         
-        # 4. Se a ação falhou (falta de recurso), podemos devolver ela para o topo da fila
-        # para a IA tentar novamente no próximo turno.
+        # 4. Se a ação falhou, tenta de novo ou descarta o plano
         if not ai_action['success'] and a_type != "attack":
-            self.ai_current_plan.insert(0, current_step)
+            # Se a IA estiver sem recursos por muitos turnos, limpa o plano 
+            # para ela pedir uma tática nova (talvez focar em fazendas/serrarias)
+            if self.turn_count % 5 == 0: 
+                self.ai_current_plan = []
+            else:
+                self.ai_current_plan.insert(0, current_step)
 
         return ai_action
 
