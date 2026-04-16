@@ -15,9 +15,11 @@ class Kingdom:
             self.resources = data.get('resources', {
                 "food": consts.INITIAL_FOOD,
                 "wood": consts.INITIAL_WOOD,
+                "gold": consts.INITIAL_GOLD,
             })
             self.buildings = data.get('buildings', consts.INITIAL_BUILDINGS.copy())
             self.army = data.get('army', consts.INITIAL_ARMY)
+            self.searched_techs = data.get('searched_techs', [])
 
         else:
             # Inicialização para novo jogo
@@ -26,9 +28,11 @@ class Kingdom:
             self.resources = {
                 "food": consts.INITIAL_FOOD, 
                 "wood": consts.INITIAL_WOOD,
+                "gold": consts.INITIAL_GOLD,
                 }
             self.buildings = consts.INITIAL_BUILDINGS.copy()
             self.army = consts.INITIAL_ARMY
+            self.searched_techs = []
 
     @property
     def occupied_slots(self):
@@ -69,12 +73,14 @@ class Kingdom:
             "resources": self.resources,
             "army": self.army,
             "civ": self.civ,
+            "searched_techs": self.searched_techs,
         }
     
     def produce_resources(self):
         '''Calcula a produção de recursos com base nas construções e bônus civis, e atualiza os recursos do reino.'''
         self.resources['food']+= int(self.buildings['fazenda'] * self.FARM_PROD_BONUS)
         self.resources['wood'] += int(self.buildings['serraria'] * self.WOOD_PROD_BONUS)
+        self.resources['gold'] += int(self.buildings.get('market', 0) * consts.GOLD_PRODUCTION_PER_MARKET)
 
     def build(self, building_type):
         '''Tenta construir um edifício do tipo especificado, verificando custos, slots e aplicando modificadores civis. Retorna True se a construção for bem-sucedida, ou False caso contrário.'''
@@ -120,7 +126,31 @@ class Kingdom:
             return False
         
         return (self.resources["food"] >= cost["food_cost"] and
-                self.resources["wood"] >= cost["wood_cost"])
+                self.resources["wood"] >= cost["wood_cost"] and
+                self.resources["gold"] >= cost["gold_cost"])
+    
+    def can_research(self, tech_id):
+        # 1. Validação básica de existência
+        if tech_id not in consts.TECHNOLOGIES:
+            return False
+    
+        tech_data = consts.TECHNOLOGIES[tech_id]
+    
+        # 2. Checagens lógicas
+        has_not_researched = tech_id not in self.searched_techs
+    
+        # CORREÇÃO: Checar se as tecnologias de requisito estão em searched_techs
+        reqs = tech_data.get('requisities', [])
+        has_requisities = all(r in self.searched_techs for r in reqs)
+    
+        # Checar se a construção raiz existe
+        root_b = tech_data.get('root_building')
+        has_root_building = self.buildings.get(root_b, 0) > 0
+    
+        # Checar ouro
+        has_resources = self.resources.get("gold", 0) >= tech_data.get('gold_cost', 0)
+    
+        return has_not_researched and has_requisities and has_root_building and has_resources
 
 class CombatEngine:
     '''Responsável por resolver os combates entre reinos, aplicando as regras de confronto e gerando relatórios detalhados sobre os resultados.'''

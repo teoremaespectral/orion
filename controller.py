@@ -43,7 +43,7 @@ class Game:
         player_data['turn_count'] = self.turn_count
         player_data['status'] = self.status
         player_data['ai_strategy'] = self.ai_strategy
-        # SALVA A FILA ATUAL
+
         player_data['ai_plan_type'] = self.ai_plan_type
         player_data['ai_current_plan'] = self.ai_current_plan
 
