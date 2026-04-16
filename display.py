@@ -149,7 +149,7 @@ def FIGHT_FEEDBACK(report):
     
     res_text = sit_map.get(sit, "O combate terminou de forma incerta...")
     feedback += f"📢 **DESFECHO:** {res_text}\n"
-    feedback += f"📉 Perdas: Você perdeu {fd.get('attacker_losses', 0)} soldados. O inimigo perdeu {fd.get('defender_losses', 0)} soldados.\n"
+    feedback += f"📉 Perdas: O atacante perdeu {int(fd['attacker_loss']*fd['attacker_start_army'])} soldados. O defensor perdeu {int(fd['defender_loss']*fd['defender_start_army'])} soldados.\n"
     if fd['is_invasion']:
         feedback += f"🏚️ Dano à cidade: {fd.get('defender_damage_taken', 0)}\n"
     

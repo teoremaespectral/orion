@@ -1,9 +1,9 @@
 CIVS = {
     "Teresópolis": {
         "label": "Teresópolis 🏔️",
-        "bonus": "Cerco de Montanhas: Muralhas 40% mais resistentes.",
+        "bonus": "Cerco de Montanhas: Muralhas 50% mais resistentes.",
         "mods": {
-            "wall_defense": 1.4,
+            "wall_defense": 1.5,
         }
     },
     "Petrópolis": {
@@ -30,7 +30,7 @@ CIVS = {
 }
 
 INITIAL_LIFE = 200
-INITIAL_FOOD = 15
+INITIAL_FOOD = 25
 INITIAL_WOOD = 25
 INITIAL_ARMY = 0
 INITIAL_BUILDINGS = {
@@ -43,9 +43,11 @@ INITIAL_BUILDINGS = {
 INITIAL_SLOTS = 0
 
 DEFENSE_PER_WALL = 5
-TRAIN_CAP_PER_QUARTEL = 5
+TRAIN_CAP_PER_QUARTEL = 6
 SLOTS_PER_HOUSE = 3
 ARMY_COST = 1
+FOOD_PRODUCTION_PER_FARM = 4
+WOOD_PRODUCTION_PER_LUMBERMILL = 4
 
 FEW_WOOD = 25
 MUCH_WOOD = 40
@@ -57,8 +59,8 @@ FEW_SLOTS = 3
 MUCH_SLOTS = 10
 FEW_BARRACKS = 2
 MUCH_BARRACKS = 5
-FEW_ARMY = 10
-MUCH_ARMY = 30
+FEW_ARMY = 35
+MUCH_ARMY = 60
 LOTS_OF_ARMY = 100
 
 TOO_LITTLE = 0.5
@@ -67,8 +69,8 @@ TOO_MUCH = 0.8
 BUILDINGS = {
     "casa": {
         "label": "🏠 Casa",
-        "wood_cost": 5,
-        "food_cost": 0,
+        "wood_cost": 0,
+        "food_cost": 10,
         "description": f"Expande a vila. Libera +{SLOTS_PER_HOUSE} slots de construção.",
         "effect_value": SLOTS_PER_HOUSE,
         "slots": 0,
@@ -77,16 +79,16 @@ BUILDINGS = {
         "label": "🌱 Fazenda",
         "wood_cost": 0,
         "food_cost": 5,
-        "description": "Garante o sustento. Produz comida a cada turno.",
-        "effect_value": 5,
+        "description": f"Garante o sustento. Produz +{FOOD_PRODUCTION_PER_FARM} comida a cada turno.",
+        "effect_value": FOOD_PRODUCTION_PER_FARM,
         "slots": 1,
     },
     "serraria": {
         "label": "🪚 Serraria",
         "wood_cost": 5,
         "food_cost": 0,
-        "description": "Essencial para obras. Produz madeira a cada turno.",
-        "effect_value": 4,
+        "description": f"Essencial para obras. Produz +{WOOD_PRODUCTION_PER_LUMBERMILL} madeira a cada turno.",
+        "effect_value": WOOD_PRODUCTION_PER_LUMBERMILL,
         "slots": 1,
     },
     "muro": {
@@ -109,14 +111,14 @@ BUILDINGS = {
 
 OPEN_BASELOSS = 0.7
 OPEN_RESIDUALLOSS = 0.2
-OPEN_CRITICALRATIO = 1.5
-OPEN_DOMINANCERATIO = 2.5
+OPEN_CRITICALRATIO = 2
+OPEN_DOMINANCERATIO = 3
 
-SIEGE_BLOCKLOSS = 0.4
-SIEGE_ATTACKERLOSS = 0.5
-SIEGE_LOWBLOCKFACTOR = 0.2
-SIEGE_HIGHBLOCKFACTOR = 0.6
+SIEGE_BLOCKLOSS = 0.2
+SIEGE_ATTACKERLOSS = 0.2
+SIEGE_LOWBLOCKFACTOR = 0.1
+SIEGE_HIGHBLOCKFACTOR = 0.4
 
 PILHAGE_BASELOSS = 0.7
-PILHAGE_DOMINANCERATIO = 1.5
-PILHAGE_DAMAGEFACTOR = 0.1
+PILHAGE_DOMINANCERATIO = 3
+PILHAGE_DAMAGEFACTOR = 0.2
