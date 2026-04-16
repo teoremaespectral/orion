@@ -107,6 +107,20 @@ class Kingdom:
             self.resources["food"] -= custo_total
             return True
         return False
+    
+    def can_build(self, building_type):
+        '''Verifica se o reino tem recursos e slots suficientes para construir um edifício do tipo especificado. Retorna True se for possível construir, ou False caso contrário.'''
+        if building_type not in consts.BUILDINGS:
+            return False
+
+        cost = consts.BUILDINGS[building_type]
+        needs_slot = cost.get('slots', 0) > 0
+
+        if needs_slot and self.occupied_slots >= self.total_slots:
+            return False
+        
+        return (self.resources["food"] >= cost["food_cost"] and
+                self.resources["wood"] >= cost["wood_cost"])
 
 class CombatEngine:
     '''Responsável por resolver os combates entre reinos, aplicando as regras de confronto e gerando relatórios detalhados sobre os resultados.'''

@@ -6,6 +6,17 @@ PLAYER_CIV_SELECT = f"Saudações, Soberano! 🏰\n\nEscolha a sua Civilização
 AI_CIV_SELECT = "Ótima escolha! Agora, qual será a Civilização do Inimigo?"
 STRATEGY_SELECT = "E qual será a postura estratégica do oponente?"
 
+CIV_BUTTON = [f"{info['label']} - {info['bonus']}" for name, info in c.CIVS.items()]
+
+def BUILD_BUTTON(player):
+    button = []
+    for building_name, info in c.BUILDINGS.items():
+
+        icon = "🔨" if player.can_build(building_name) else "🚫"
+        text = f"{icon} {info['label']} (🍎{info['food_cost']} 🪵{info['wood_cost']})"
+        button.append(text)
+    return button
+
 def WAR_START(p_civ, a_civ, strategy):
     texto = (
         "🚩 **GUERRA DECLARADA!**\n\n"
@@ -76,6 +87,24 @@ def ACTION_FEEDBACK(report):
         else:
             feedback = "🚫 **Cancelado:** Você não tem soldados para atacar."
 
+    return feedback
+
+def AI_ACTION_FEEDBACK(report):
+    ai_act = report.get('ai_action', {})
+    if not ai_act: return ""
+    
+    feedback = ""
+    if ai_act.get('type') == 'build' and ai_act.get('success'):
+        target = ai_act.get('target')
+        label = c.BUILDINGS.get(target, {}).get('label', target)
+        feedback = f"🏗️ **Inimigo construiu:** O oponente erigiu um *{label}*."
+        
+    elif ai_act.get('type') == 'army' and ai_act.get('success'):
+        feedback = "⚔️ **Inimigo recrutou:** O inimigo reforçou suas tropas!"
+        
+    elif ai_act.get('type') == 'attack' and ai_act.get('success'):
+        feedback = "⚠️ **Inimigo atacou!** Prepare-se para a batalha!"
+    
     return feedback
 
 def FIGHT_FEEDBACK(report):

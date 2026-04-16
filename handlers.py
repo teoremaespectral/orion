@@ -1,7 +1,7 @@
 from bot import my_bot
 from Message import Message as M
 from controller import Game
-import constants as consts
+import constants as c
 from telepot.namedtuple import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 import display as txt
 
@@ -19,13 +19,14 @@ def send_message(chat_id, text, reply_markup=None):
 # --- TECLADOS DINÂMICOS ---
 
 def get_civ_keyboard():
+    '''Gera um teclado com as civilizações disponíveis para escolha.'''
     keys = []
-    for name, info in consts.CIVS.items():
-        text = f"{info['label']} - {info['bonus']}"
+    for text in txt.CIV_BUTTON:
         keys.append([KeyboardButton(text=text)])
     return ReplyKeyboardMarkup(keyboard=keys, resize_keyboard=True, one_time_keyboard=True)
 
 def get_strategy_keyboard():
+    '''Gera um teclado com as estratégias disponíveis para a IA.'''
     return ReplyKeyboardMarkup(keyboard=[
         [KeyboardButton(text="Dumb"), KeyboardButton(text="Rusher")],
         [KeyboardButton(text="Turtle"), KeyboardButton(text="Greedy")],
@@ -33,35 +34,29 @@ def get_strategy_keyboard():
     ], resize_keyboard=True, one_time_keyboard=True)
 
 def get_main_keyboard():
+    '''Gera o teclado principal de ações para o jogador.'''
     return ReplyKeyboardMarkup(keyboard=[
         [KeyboardButton(text="🏗️ Construções"), KeyboardButton(text="⚔️ Treinar Exército")],
         [KeyboardButton(text="😈 ATACAR"), KeyboardButton(text="📊 Status")]
     ], resize_keyboard=True)
 
 def get_build_keyboard(player):
+    ''''Gera um teclado para o menu de construção, mostrando quais edificações o jogador pode construir com base em seus recursos atuais.'''
     keys = []
-    for b_id, info in consts.BUILDINGS.items():
-        # Lógica de "Botão Escuro/Bloqueado"
-        can_build = (player.resources['food'] >= info['food_cost'] and 
-                     player.resources['wood'] >= info['wood_cost'])
-        
-        if info.get('slots', 0) > 0 and player.occupied_slots >= player.total_slots:
-            can_build = False
-
-        icon = "🔨" if can_build else "🚫"
-        label = f"{icon} {info['label']} (🍎{info['food_cost']} 🪵{info['wood_cost']})"
+    for label in txt.BUILD_BUTTON(player):
         keys.append([KeyboardButton(text=label)])
     
     keys.append([KeyboardButton(text="🔙 Voltar")])
     return ReplyKeyboardMarkup(keyboard=keys, resize_keyboard=True)
 
+# --- GAME SETUP ---
+
 user_setup = {}
 handlers = []
 
-# --- GAME SETUP ---
-
 @handlers.append
 def start_game(m: M):
+    '''Inicia o processo de configuração do jogo, guiando o jogador pela escolha de civilização e estratégia.'''
     if m.command == "/start":
         user_setup[m.user_id] = {"step": "choosing_player_civ"}
         texto = txt.PLAYER_CIV_SELECT
@@ -69,25 +64,29 @@ def start_game(m: M):
 
 @handlers.append
 def handle_setup_flow(m: M):
+    '''Gerencia o fluxo de configuração do jogo, avançando o jogador pelas etapas de escolha de civilização e estratégia com base em suas respostas.'''
     state = user_setup.get(m.user_id, {}).get("step")
     if not state: return
 
+    # 1. ESCOLHA DA CIVILIZAÇÃO DO JOGADOR
     if state == "choosing_player_civ":
-        chosen = next((k for k, v in consts.CIVS.items() if v["label"] in m.text), None)
+        chosen = next((k for k, v in c.CIVS.items() if v["label"] in m.text), None)
         if chosen:
             user_setup[m.user_id]["player_civ"] = chosen
             user_setup[m.user_id]["step"] = "choosing_ai_civ"
             text = txt.AI_CIV_SELECT
             send_message(m.chat_id, text, reply_markup=get_civ_keyboard())
 
+    # 2. ESCOLHA DA CIVILIZAÇÃO DO INIMIGO
     elif state == "choosing_ai_civ":
-        chosen = next((k for k, v in consts.CIVS.items() if v["label"] in m.text), None)
+        chosen = next((k for k, v in c.CIVS.items() if v["label"] in m.text), None)
         if chosen:
             user_setup[m.user_id]["ai_civ"] = chosen
             user_setup[m.user_id]["step"] = "choosing_strategy"
             text = txt.STRATEGY_SELECT
             send_message(m.chat_id, text, reply_markup=get_strategy_keyboard())
 
+    # 3. ESCOLHA DA ESTRATÉGIA DA IA
     elif state == "choosing_strategy":
         strategies = ["Dumb", "Rusher", "Turtle", "Greedy", "Aleatório"]
         if m.text in strategies:
@@ -105,6 +104,7 @@ def handle_setup_flow(m: M):
 
 @handlers.append
 def handle_menu_navigation(m: M):
+    ''''Gerencia a navegação entre os menus do jogo, permitindo que o jogador acesse o menu de construção ou retorne ao menu principal conforme suas escolhas.'''
     game = Game(m.user_id, m.user_name)
     
     # 1. ENTRAR NO MENU DE CONSTRUÇÃO
@@ -120,6 +120,7 @@ def handle_menu_navigation(m: M):
 
 @handlers.append
 def show_status(m: M):
+    '''Exibe o status atual do reino do jogador, incluindo recursos, força militar, integridade e outras informações relevantes para a tomada de decisões estratégicas.'''
     if m.command == "/status" or m.text == "📊 Status":
         game = Game(m.user_id, m.user_name)
         player = game.player
@@ -129,6 +130,7 @@ def show_status(m: M):
 
 @handlers.append
 def handle_actions(m: M):
+    '''Gerencia as ações do jogador durante o jogo, interpretando suas escolhas e executando os turnos correspondentes, além de fornecer feedback detalhado sobre os resultados de suas ações e as movimentações da IA.'''
     game = Game(m.user_id, m.user_name)
     if game.status != "active": return
 
@@ -141,7 +143,7 @@ def handle_actions(m: M):
         action = {"type": "attack", "target": "invasion"} # Padrão v1.2
     elif "🔨" in m.text or "🚫" in m.text:
         # Extrair o nome da construção do texto do botão
-        for b_id, info in consts.BUILDINGS.items():
+        for b_id, info in c.BUILDINGS.items():
             if info['label'] in m.text:
                 action = {"type": "build", "target": b_id}
                 break
@@ -151,31 +153,12 @@ def handle_actions(m: M):
         
         # 1. Cabeçalho do Turno
         full_report = txt.TURN_REPORT_INTRODUCTION(game.turn_count - 1)
-        
         # 2. Feedback da sua ação (O que você já tinha)
         full_report += txt.ACTION_FEEDBACK(report) + "\n"
-        
         # 3. Feedback da IA (Opcional: você quer que o jogador saiba o que a IA fez?)
-        # Se quiser esconder a IA para dar mistério, pule esta parte.
-        if report['ai_action']['success']:
-            ai_raw_target = report['ai_action']['target']
-            ai_type = report['ai_action']['type']
-            
-            if ai_type == 'army':
-                detalhe = "recrutando novos soldados ⚔️"
-            elif ai_type == 'build':
-                # Busca o nome bonitinho da construção no constants.py
-                label = consts.BUILDINGS.get(ai_raw_target, {}).get('label', ai_raw_target)
-                detalhe = f"construindo {label} 🏗️"
-            else:
-                detalhe = "planejando uma ofensiva 🚩"
-                
-            full_report += f"🕵️ **Espiões relatam:** Inimigo foi visto {detalhe}.\n"
-
+        full_report += txt.AI_ACTION_FEEDBACK(report) + "\n" #Retirar quando acabar o debug
         # 4. Feedback de Combate (Se houve luta)
         if report.get("fight_data"):
             full_report += txt.FIGHT_FEEDBACK(report)
-            pass
-
         # 5. Envia tudo em uma única mensagem elegante
         send_message(m.chat_id, full_report, reply_markup=get_main_keyboard())
