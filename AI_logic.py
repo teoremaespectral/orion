@@ -186,13 +186,10 @@ def turtle_strategy(ai):
         return get_tactic_sequence(tactic_type, tactic_name)
     
     else:
-
         if needs_food(ai, c.MUCH_FOOD):
             return get_tactic_sequence('build', 'make_some_farms')
-        
         if needs_wood(ai, c.MUCH_WOOD):
             return get_tactic_sequence('build', 'make_some_sawmills')
-        
         tactic_type, tactic_name = choices([
             ['army','train_lots_of_soldiers'],
             ['build', 'make_lots_of_barracks'],

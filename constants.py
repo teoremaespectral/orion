@@ -109,6 +109,29 @@ BUILDINGS = {
     }
 }
 
+TECHNOLOGIES = {
+    "fertilizer": {
+        "label": "🪱 Fertilizante",
+        "description": "Aumenta a produção de comida em 20%",
+        "gold_cost": 50,
+        "mods": {
+            "food_production": 1.2,
+        },
+        "requisities": [],
+        "root_building": 'mill',
+    },
+    "fortification": {
+        "label": "🛡️ Muralhas reforçadas",
+        "description": "Aumenta a defesa das muralhas em 20%",
+        "gold_cost": 40,
+        "mods": {
+            "wall_defense": 1.2,
+        },
+        "requisities": [],
+        "root_building": 'construction house',
+    }
+}
+
 OPEN_BASELOSS = 0.7
 OPEN_RESIDUALLOSS = 0.2
 OPEN_CRITICALRATIO = 2
