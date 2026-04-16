@@ -48,6 +48,7 @@ SLOTS_PER_HOUSE = 3
 ARMY_COST = 1
 FOOD_PRODUCTION_PER_FARM = 4
 WOOD_PRODUCTION_PER_LUMBERMILL = 4
+GOLD_PRODUCTION_PER_MARKET = 5
 
 FEW_WOOD = 25
 MUCH_WOOD = 40
@@ -91,6 +92,14 @@ BUILDINGS = {
         "effect_value": WOOD_PRODUCTION_PER_LUMBERMILL,
         "slots": 1,
     },
+    "mercado": {
+        "label": "🛒 Mercado",
+        "wood_cost": 30,
+        "food_cost": 0,
+        "description": f"Faz o comércio girar. Produz +{GOLD_PRODUCTION_PER_MARKET} ouro a cada turno.",
+        "effect_value": GOLD_PRODUCTION_PER_MARKET,
+        "slots": 1,
+    },
     "muro": {
         "label": "🧱 Muro",
         "wood_cost": 20,
@@ -101,16 +110,40 @@ BUILDINGS = {
     },
     "quartel": {
         "label": "⚔️ Quartel",
-        "wood_cost": 5,
+        "wood_cost": 50,
         "food_cost": 0,
         "description": f"Treinamento militar. Permite treinar até {TRAIN_CAP_PER_QUARTEL} soldados por turno.",
         "effect_value": TRAIN_CAP_PER_QUARTEL,
         "slots": 1,
+    },
+    "casa de construção": {
+        "label": "🏗️ Casa de Construção",
+        "wood_cost": 30,
+        "food_cost": 0,
+        "description": f"Libera tecnologias de construção e engenharia.",
+        "effect_value": None,
+        "slots": 2,
+    },
+    "moinho": {
+        "label": "🌾 Moinho",
+        "wood_cost": 40,
+        "food_cost": 0,
+        "description": f"Libera tecnologias para as fazendas.",
+        "effect_value": None,
+        "slots": 2,
+    },
+    "arsenal": {
+        "label": "🛡️ Arsenal",
+        "wood_cost": 50,
+        "food_cost": 0,
+        "description": f"Libera tecnologias para benefício do exército.",
+        "effect_value": None,
+        "slots": 2,
     }
 }
 
 TECHNOLOGIES = {
-    "fertilizer": {
+    "fertilizante": {
         "label": "🪱 Fertilizante",
         "description": "Aumenta a produção de comida em 20%",
         "gold_cost": 50,
@@ -118,9 +151,9 @@ TECHNOLOGIES = {
             "food_production": 1.2,
         },
         "requisities": [],
-        "root_building": 'mill',
+        "root_building": 'moinho',
     },
-    "fortification": {
+    "muralhas reforçadas": {
         "label": "🛡️ Muralhas reforçadas",
         "description": "Aumenta a defesa das muralhas em 20%",
         "gold_cost": 40,
@@ -128,7 +161,37 @@ TECHNOLOGIES = {
             "wall_defense": 1.2,
         },
         "requisities": [],
-        "root_building": 'construction house',
+        "root_building": 'casa de construção',
+    },
+    "milícia da cidade": {
+        "label": "👥 Milícia da Cidade",
+        "description": "Diminui o dano de pilhagem em 25%",
+        "gold_cost": 30,
+        "mods": {
+            "pilhage_damage": 0.75,
+        },
+        "requisities": [],
+        "root_building": 'casa de construção',
+    },
+    "aço leve": {
+        "label": "⚔️ Aço Leve",
+        "description": "Unidades se tornam 20% mais baratas de treinar",
+        "gold_cost": 40,
+        "mods": {
+            "army_cost": 0.8,
+        },
+        "requisities": [],
+        "root_building": 'arsenal',
+    },
+    "legião de combate": {
+        "label": "⚔️ Legião de Combate",
+        "description": "Unidades se tornam 50% mais baratas de treinar",
+        "gold_cost": 50,
+        "mods": {
+            "army_cost": 0.5,
+        },
+        "requisities": ["aço leve"],
+        "root_building": 'arsenal',
     }
 }
 
