@@ -30,7 +30,7 @@ CIVS = {
 }
 
 INITIAL_LIFE = 200
-INITIAL_FOOD = 25
+INITIAL_FOOD = 50
 INITIAL_WOOD = 25
 INITIAL_ARMY = 0
 INITIAL_BUILDINGS = {
@@ -52,9 +52,9 @@ WOOD_PRODUCTION_PER_LUMBERMILL = 4
 FEW_WOOD = 25
 MUCH_WOOD = 40
 LOTS_OF_WOOD = 80
-FEW_FOOD = 15
-MUCH_FOOD = 40
-LOTS_OF_FOOD = 80
+FEW_FOOD = 40
+MUCH_FOOD = 70
+LOTS_OF_FOOD = 100
 FEW_SLOTS = 3
 MUCH_SLOTS = 10
 FEW_BARRACKS = 2
@@ -70,7 +70,7 @@ BUILDINGS = {
     "casa": {
         "label": "🏠 Casa",
         "wood_cost": 0,
-        "food_cost": 10,
+        "food_cost": 30,
         "description": f"Expande a vila. Libera +{SLOTS_PER_HOUSE} slots de construção.",
         "effect_value": SLOTS_PER_HOUSE,
         "slots": 0,
