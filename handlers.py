@@ -160,5 +160,13 @@ def handle_actions(m: M):
         # 4. Feedback de Combate (Se houve luta)
         if report.get("fight_data"):
             full_report += txt.FIGHT_FEEDBACK(report)
-        # 5. Envia tudo em uma única mensagem elegante
-        send_message(m.chat_id, full_report, reply_markup=get_main_keyboard())
+        # 5. Verificar se o jogo acabou para definir o teclado final
+        if game.status in ["player_won", "ai_won"]:
+            resultado = txt.VICTORY if game.status == "player_won" else txt.FAILURE
+            full_report += f"\n\n{resultado}"
+            
+            markup = ReplyKeyboardRemove()
+        else:
+            markup = get_main_keyboard()
+        # 6. Envia a mensagem final com o teclado atualizado (ou removido)
+        send_message(m.chat_id, full_report, reply_markup=markup)
