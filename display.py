@@ -43,15 +43,18 @@ def STATUS_MSG(player, turn):
         f"────────────────────\n"
         f"❤️ Integridade: {player.life}/{c.INITIAL_LIFE}\n"
         f"⚔️ Força Militar: {player.army} soldados\n"
-        f"🧱 Defesa (Muros): {player.buildings.get('muro', 0)}\n"
         f"────────────────────\n"
         f"🍎 Comida: {player.resources['food']}\n"
         f"🪵 Madeira: {player.resources['wood']}\n"
         f"🏘️ Espaço: {player.occupied_slots}/{player.total_slots}\n"
         f"────────────────────\n"
         f"🏠 Casas: {player.buildings.get('casa', 0)} | "
+        f"🧱 Muros: {player.buildings.get('muro', 0)}\n"
+        f"────────────────────\n"
         f"🌱 Fazendas: {player.buildings.get('fazenda', 0)} | "
         f"🪚 Serrarias: {player.buildings.get('serraria', 0)}"
+        f"🛖 Quarteis: {player.buildings.get('quartel', 0)} | "
+        f"\n────────────────────\n"
     )
     return texto
 
@@ -112,7 +115,6 @@ def FIGHT_FEEDBACK(report):
     if not fd: return ""
 
     sit = fd.get("situation")
-    is_invasion = fd.get("is_invasion", False)
     
     # Lógica corrigida para identificar quem atacou quem
     p_atk = report['player_action'].get('type') == 'attack' and report['player_action'].get('success')
@@ -126,10 +128,12 @@ def FIGHT_FEEDBACK(report):
         feedback += f"⚔️ Exército inimigo: {fd.get('defender_start_army')}\n"
     elif p_atk:
         feedback += f"\n🏰 **VOCÊ INVADIU O INIMIGO!**\n"
+        feedback += f"⚔️ Seu exército: {fd.get('attacker_start_army')}\n"
         feedback += f"🛡️ Defesa deles: {fd.get('defender_start_army')} soldados + Muros\n"
     else:
         feedback += f"\n🏰 **SEU REINO FOI INVADIDO!**\n"
         feedback += f"⚔️ Atacantes: {fd.get('attacker_start_army')}\n"
+        feedback += f"🛡️ Sua defesa: {fd.get('defender_start_army')} soldados + Muros\n"
 
     sit_map = {
         'draw': "⚖️ *Empate!* Ambos os exércitos foram dizimados.",
@@ -145,6 +149,9 @@ def FIGHT_FEEDBACK(report):
     
     res_text = sit_map.get(sit, "O combate terminou de forma incerta...")
     feedback += f"📢 **DESFECHO:** {res_text}\n"
+    feedback += f"📉 Perdas: Você perdeu {fd.get('attacker_losses', 0)} soldados. O inimigo perdeu {fd.get('defender_losses', 0)} soldados.\n"
+    if fd['is_invasion']:
+        feedback += f"🏚️ Dano à cidade: {fd.get('defender_damage_taken', 0)}\n"
     
     if fd.get('defender_damage_taken', 0) > 0:
         alvo = "Inimigo" if p_atk else "Seu reino"
