@@ -140,7 +140,7 @@ def show_status(m: M):
 @handlers.append
 def show_info(m: M):
     if m.command == "/info" or m.text == "ℹ️ Info": 
-        texto = txt.INFO_MSG
+        texto = txt.INFO_MSG()
         send_message(m.chat_id, texto, reply_markup=get_main_keyboard())
 
 @handlers.append
