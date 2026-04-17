@@ -1,4 +1,5 @@
 import constants as c
+from math import prod
 
 class Kingdom:
     '''Representa o estado de um reino, incluindo recursos, construções, exército e vida.'''
@@ -46,7 +47,7 @@ class Kingdom:
         return c.INITIAL_SLOTS + (self.buildings['casa'] * c.SLOTS_PER_HOUSE)
 
     def MODIFIER(self, mod_type):
-        tech_mod = sum(c.TECHNOLOGIES[t].get('mods', {}).get(mod_type, 1.0) for t in self.searched_techs)
+        tech_mod = prod(c.TECHNOLOGIES[t].get('mods', {}).get(mod_type, 1.0) for t in self.searched_techs)
         civ_mod = c.CIVS.get(self.civ, {}).get('mods', {}).get(mod_type, 1.0)
         return tech_mod * civ_mod
     

@@ -34,10 +34,11 @@ def get_strategy_keyboard():
     ], resize_keyboard=True, one_time_keyboard=True)
 
 def get_main_keyboard():
-    '''Gera o teclado principal de ações para o jogador.'''
+    # Teclado principal com Pesquisa e Info inclusos
     return ReplyKeyboardMarkup(keyboard=[
-        [KeyboardButton(text="🏗️ Construções"), KeyboardButton(text="⚔️ Treinar Exército")],
-        [KeyboardButton(text="😈 ATACAR"), KeyboardButton(text="📊 Status")]
+        [KeyboardButton(text="🏗️ Construções"), KeyboardButton(text="🔬 Pesquisar")],
+        [KeyboardButton(text="⚔️ Exército"), KeyboardButton(text="🚩 ATACAR")],
+        [KeyboardButton(text="📊 Status"), KeyboardButton(text="ℹ️ Info")]
     ], resize_keyboard=True)
 
 def get_build_keyboard(player):
@@ -48,6 +49,12 @@ def get_build_keyboard(player):
     
     keys.append([KeyboardButton(text="🔙 Voltar")])
     return ReplyKeyboardMarkup(keyboard=keys, resize_keyboard=True)
+
+def get_research_keyboard(player):
+    options = txt.RESEARCH_BUTTONS(player)
+    # Organiza em 2 colunas para não ficar uma lista gigante
+    keyboard = [options[i:i + 2] for i in range(0, len(options), 2)]
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 # --- GAME SETUP ---
 
@@ -107,13 +114,15 @@ def handle_menu_navigation(m: M):
     ''''Gerencia a navegação entre os menus do jogo, permitindo que o jogador acesse o menu de construção ou retorne ao menu principal conforme suas escolhas.'''
     game = Game(m.user_id, m.user_name)
     
-    # 1. ENTRAR NO MENU DE CONSTRUÇÃO
     if m.text == "🏗️ Construções":
-        texto = txt.BUILD_MENU_MSG(game.player)
-        send_message(m.chat_id, texto, reply_markup=get_build_keyboard(game.player))
+        text = txt.BUILD_MENU_MSG(game.player)
+        send_message(m.chat_id, text, reply_markup=get_build_keyboard(game.player))
         return True
+    
+    if m.text == "🔬 Pesquisar":
+        text = txt.RESEARCH_MENU_MSG(game.player)
+        send_message(m.chat_id, text, reply_markup=get_research_keyboard(game.player))
 
-    # 2. VOLTAR AO MENU PRINCIPAL
     if m.text == "🔙 Voltar":
         send_message(m.chat_id, "Retornando ao conselho real...", reply_markup=get_main_keyboard())
         return True
@@ -129,6 +138,12 @@ def show_status(m: M):
         send_message(m.chat_id, texto, reply_markup=get_main_keyboard())
 
 @handlers.append
+def show_info(m: M):
+    if m.command == "/info" or m.text == "ℹ️ Info": 
+        texto = txt.INFO_MSG
+        send_message(m.chat_id, texto, reply_markup=get_main_keyboard())
+
+@handlers.append
 def handle_actions(m: M):
     '''Gerencia as ações do jogador durante o jogo, interpretando suas escolhas e executando os turnos correspondentes, além de fornecer feedback detalhado sobre os resultados de suas ações e as movimentações da IA.'''
     game = Game(m.user_id, m.user_name)
@@ -140,13 +155,19 @@ def handle_actions(m: M):
     if "Treinar Exército" in m.text:
         action = {"type": "army", "target": None}
     elif "ATACAR" in m.text:
-        action = {"type": "attack", "target": "invasion"} # Padrão v1.2
-    elif "🔨" in m.text or "🚫" in m.text:
-        # Extrair o nome da construção do texto do botão
+        action = {"type": "attack", "target": "invasion"}
+    elif "🔨" in m.text:
         for b_id, info in c.BUILDINGS.items():
             if info['label'] in m.text:
                 action = {"type": "build", "target": b_id}
                 break
+    elif "🧪" in m.text:
+        for t_id, info in c.TECHNOLOGIES.items():
+            if info['label'] in m.text:
+                action = {"type": "research", "target": t_id}
+                break
+    elif "🚫" in m.text:
+        send_message(m.chat_id, txt.WRONG_ACTION, reply_markup=get_main_keyboard())
 
     if action["type"]:
         report = game.play_turn(action) # Executa o turno completo
