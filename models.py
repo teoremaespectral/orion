@@ -1,6 +1,8 @@
 import constants as c
 from math import prod
 
+from orion import AI_logic
+
 class Kingdom:
     '''Representa o estado de um reino, incluindo recursos, construções, exército e vida.'''
     def __init__(self, user_id, user_name, data=None):
@@ -175,6 +177,44 @@ class Kingdom:
         has_resources = self.resources.get("gold", 0) >= tech_data.get('gold_cost', 0)
     
         return has_not_researched and has_requisities and has_root_building and has_resources
+    
+class Bot:
+    '''Representa um bot controlado por IA, com uma civilização, personalidade e táticas de jogo. O bot pode decidir suas ações com base no estado do reino e em sua personalidade, utilizando a lógica definida em AI_logic para determinar suas táticas.'''
+    def __init__(self, civ='Teresópolis', personality='dumb', bot_data = None):
+        '''Inicializa o bot com dados pré-existentes ou valores padrão para um novo bot. Se bot_data for fornecido, ele é usado para configurar o estado do bot; caso contrário, os parâmetros civ e personality são usados para definir a civilização e personalidade do bot, com táticas e contagem de turnos iniciando em valores padrão.'''
+        if bot_data:
+            self.civ = bot_data['civ']
+            self.personality = bot_data['personality']
+            self.turn_count = bot_data['turn_count']
+            self.tactic = bot_data['tactic']
+            self.tactic_type = bot_data['tactic_type']
+
+        else:
+            self.civ = civ
+            self.personality = personality
+            self.turn_count = 1
+            self.tactic = []
+            self.tactic_type = None
+
+    def to_dict(self):
+        """Transforma as informações contidas na instância em um dicionário"""
+        return {
+            "civ" : self.civ,
+            "personality" : self.personality,
+            "turn_count" : self.turn_count,
+            "tactic" : self.tactic,
+            "tactic_type" : self.tactic_type,
+        }
+
+    def get_next_action(self, kingdom_state):
+        '''Determina a próxima ação do bot com base em sua personalidade e no estado atual do reino. Se o bot não tiver táticas definidas, ele chama a função get_ai_tactic de AI_logic para obter uma nova tática com base em sua personalidade e no estado do reino. Em seguida, ele retorna a próxima ação a ser executada, que inclui o tipo de ação e o alvo da ação.'''
+        if not self.tactic:
+            self.tactic_type, self.tactic = AI_logic.get_ai_tactic(self.personality, kingdom_state)
+    
+        action_target = self.tactic.pop(0)
+        return {"type": self.tactic_type, "target": action_target}
+
+    
 
 class CombatEngine:
     '''Responsável por resolver os combates entre reinos, aplicando as regras de confronto e gerando relatórios detalhados sobre os resultados.'''
