@@ -87,7 +87,7 @@ class Game:
     
         # 4. Produção (Turno passa para ambos)
         self.player.produce_resources()
-        self.ai.produce_resources()
+        self.ai_kingdom.produce_resources()
 
         # Salvar
         self.turn_count += 1
@@ -132,16 +132,16 @@ class Game:
 
         # 3. Tenta executar
         if a_type == "build":
-            if self.ai.build(a_target):
+            if self.ai_kingdom.build(a_target):
                 ai_action['success'] = True
         elif a_type == "research":
-            if self.ai.research(a_target):
+            if self.ai_kingdom.research(a_target):
                 ai_action['success'] = True
         elif a_type == "army":
             if self.ai.train_army():
                 ai_action['success'] = True
         elif a_type == "attack":
-            if self.ai.army > 0:
+            if self.ai_kingdom.army > 0:
                 ai_action['success'] = True
 
         return ai_action
