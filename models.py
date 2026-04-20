@@ -186,7 +186,6 @@ class Bot:
             self._setup_new_bot()
 
         else:
-            self.name = brain_data['name']
             self.civ = brain_data['civ']
             self.personality = brain_data['personality']
             self.turn_count = brain_data['turn_count']
@@ -195,7 +194,6 @@ class Bot:
 
     def _setup_new_bot(self):
         '''Configura um novo bot com uma civilização e personalidade específicas, e inicializa suas táticas e contagem de turnos. Este método é chamado quando não há dados pré-existentes para o bot, garantindo que ele seja criado com uma configuração limpa e consistente.'''
-        self.name = "Bot"
         self.civ = 'Teresópolis'
         self.personality = 'dumb'
         self.turn_count = 1
@@ -205,7 +203,6 @@ class Bot:
     def to_dict(self):
         """Transforma as informações contidas na instância em um dicionário"""
         return {
-            "name" : self.name,
             "civ" : self.civ,
             "personality" : self.personality,
             "tactic" : self.tactic,

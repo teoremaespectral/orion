@@ -1,8 +1,5 @@
 from models import Kingdom, Bot, CombatEngine
 from db_utils import get_db, save_db
-import constants as consts
-import AI_logic
-from random import choice
 
 class Game:
     def __init__(self, user_id, user_name):
@@ -52,8 +49,8 @@ class Game:
     def setup(self, player_civ="Teresópolis", ai_civ="Petrópolis", strategy="Aleatório"):
         '''Configura o jogo para um novo usuário, definindo as civilizações do jogador e da IA, bem como a estratégia da IA. Garante que os reinos sejam criados com os bônus e modificadores corretos de acordo com as civilizações escolhidas. Salva o estado inicial do jogo no banco de dados.'''
         # Garante que criamos reinos limpos com a civ correta
-        self.player = Kingdom(self.user_id, self.user_name)
-        self.player.civ = player_civ
+        self.player_kingdom = Kingdom(self.user_id, self.user_name)
+        self.player_kingdom.civ = player_civ
     
         self.ai_kingdom = Kingdom(f"{self.user_id}_ai", "Bot")
         self.ai_kingdom.civ = ai_civ
@@ -86,7 +83,7 @@ class Game:
         fight_data = self.process_fight(player_action, ai_action)
     
         # 4. Produção (Turno passa para ambos)
-        self.player.produce_resources()
+        self.player_kingdom.produce_resources()
         self.ai_kingdom.produce_resources()
 
         # Salvar
@@ -107,13 +104,13 @@ class Game:
         action['success'] = False
 
         if a_type == "build":
-            if self.player.build(a_target):
+            if self.player_kingdom.build(a_target):
                 action['success'] = True
         elif a_type == "research":
-            if self.player.research(a_target):
+            if self.player_kingdom.research(a_target):
                 action['success'] = True
         elif a_type == "army":
-            if self.player.train_army():
+            if self.player_kingdom.train_army():
                 action['success'] = True
         elif a_type == "attack":
             if self.player.army > 0:
@@ -153,23 +150,23 @@ class Game:
 
         if p_true_attack and ai_true_attack:
             # Caso 1: Ambos atacam -> Campo Aberto
-            engine = CombatEngine(self.player, self.ai_kingdom)
+            engine = CombatEngine(self.player_kingdom, self.ai_kingdom)
             return engine.resolve(type="open_field")
             
         elif p_true_attack:
             # Caso 2: Só jogador ataca -> Invasão à IA
-            engine = CombatEngine(self.player, self.ai_kingdom)
+            engine = CombatEngine(self.player_kingdom, self.ai_kingdom)
             return engine.resolve(type="invasion")
             
         elif ai_true_attack:
             # Caso 3: Só IA ataca -> Invasão ao Jogador
-            engine = CombatEngine(self.ai_kingdom, self.player)
+            engine = CombatEngine(self.ai_kingdom, self.player_kingdom)
             return engine.resolve(type="invasion")
 
         return None
     
     def _check_victory_conditions(self):
-        if self.player.life <= 0:
+        if self.player_kingdom.life <= 0:
             self.status = "ai_won"
         elif self.ai_kingdom.life <= 0:
             self.status = "player_won"

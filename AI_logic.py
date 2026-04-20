@@ -1,5 +1,4 @@
 from random import choice, choices
-from utils import is_too_little, is_too_much
 import constants as c
 
 # --- SENSORES ---
