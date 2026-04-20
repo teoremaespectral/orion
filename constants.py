@@ -30,8 +30,8 @@ CIVS = {
 }
 
 INITIAL_LIFE = 200
-INITIAL_FOOD = 50
-INITIAL_WOOD = 25
+INITIAL_FOOD = 60
+INITIAL_WOOD = 30
 INITIAL_GOLD = 0
 INITIAL_ARMY = 0
 INITIAL_BUILDINGS = {
@@ -47,8 +47,8 @@ DEFENSE_PER_WALL = 5
 TRAIN_CAP_PER_QUARTEL = 6
 SLOTS_PER_HOUSE = 3
 ARMY_COST = 1
-FOOD_PRODUCTION_PER_FARM = 4
-WOOD_PRODUCTION_PER_LUMBERMILL = 4
+FOOD_PRODUCTION_PER_FARM = 2
+WOOD_PRODUCTION_PER_LUMBERMILL = 2
 GOLD_PRODUCTION_PER_MARKET = 5
 
 FEW_WOOD = 25
@@ -72,22 +72,22 @@ BUILDINGS = {
     "casa": {
         "label": "🏠 Casa",
         "wood_cost": 0,
-        "food_cost": 30,
+        "food_cost": 40,
         "description": f"Expande a vila. Libera +{SLOTS_PER_HOUSE} slots de construção.",
         "effect_value": SLOTS_PER_HOUSE,
         "slots": 0,
     },
     "fazenda": {
         "label": "🌱 Fazenda",
-        "wood_cost": 0,
-        "food_cost": 5,
+        "wood_cost": 6,
+        "food_cost": 0,
         "description": f"Garante o sustento. Produz +{FOOD_PRODUCTION_PER_FARM} comida a cada turno.",
         "effect_value": FOOD_PRODUCTION_PER_FARM,
         "slots": 1,
     },
     "serraria": {
         "label": "🪚 Serraria",
-        "wood_cost": 5,
+        "wood_cost": 6,
         "food_cost": 0,
         "description": f"Essencial para obras. Produz +{WOOD_PRODUCTION_PER_LUMBERMILL} madeira a cada turno.",
         "effect_value": WOOD_PRODUCTION_PER_LUMBERMILL,
@@ -95,7 +95,7 @@ BUILDINGS = {
     },
     "mercado": {
         "label": "🛒 Mercado",
-        "wood_cost": 30,
+        "wood_cost": 20,
         "food_cost": 0,
         "description": f"Faz o comércio girar. Produz +{GOLD_PRODUCTION_PER_MARKET} ouro a cada turno.",
         "effect_value": GOLD_PRODUCTION_PER_MARKET,
@@ -111,7 +111,7 @@ BUILDINGS = {
     },
     "quartel": {
         "label": "⚔️ Quartel",
-        "wood_cost": 50,
+        "wood_cost": 24,
         "food_cost": 0,
         "description": f"Treinamento militar. Permite treinar até {TRAIN_CAP_PER_QUARTEL} soldados por turno.",
         "effect_value": TRAIN_CAP_PER_QUARTEL,
