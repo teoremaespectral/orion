@@ -15,7 +15,7 @@ CIVS = {
     },
     "Volta Redonda": {
         "label": "Volta Redonda 🏭",
-        "bonus": "Fábricas: Produção de recursos 25% maior.",
+        "bonus": "Fábricas: Produção de comida 25% maior.",
         "mods": {
             "food_production": 1.25,
         }
@@ -44,12 +44,12 @@ INITIAL_BUILDINGS = {
 INITIAL_SLOTS = 0
 
 DEFENSE_PER_WALL = 5
-TRAIN_CAP_PER_QUARTEL = 6
+TRAIN_CAP_PER_QUARTEL = 3
 SLOTS_PER_HOUSE = 3
-ARMY_COST = 1
+ARMY_COST = 2
 FOOD_PRODUCTION_PER_FARM = 2
 WOOD_PRODUCTION_PER_LUMBERMILL = 2
-GOLD_PRODUCTION_PER_MARKET = 5
+GOLD_PRODUCTION_PER_MARKET = 4
 
 FEW_WOOD = 25
 MUCH_WOOD = 40
@@ -103,7 +103,7 @@ BUILDINGS = {
     },
     "muro": {
         "label": "🧱 Muro",
-        "wood_cost": 20,
+        "wood_cost": 10,
         "food_cost": 0,
         "description": f"Proteção física. Aumenta a defesa base em +{DEFENSE_PER_WALL}.",
         "effect_value": DEFENSE_PER_WALL,
@@ -119,27 +119,27 @@ BUILDINGS = {
     },
     "casa de construção": {
         "label": "🏗️ Casa de Construção",
-        "wood_cost": 30,
+        "wood_cost": 40,
         "food_cost": 0,
         "description": f"Libera tecnologias de construção e engenharia.",
         "effect_value": None,
-        "slots": 2,
+        "slots": 3,
     },
     "moinho": {
         "label": "🌾 Moinho",
-        "wood_cost": 40,
+        "wood_cost": 20,
         "food_cost": 0,
         "description": f"Libera tecnologias para as fazendas.",
         "effect_value": None,
-        "slots": 2,
+        "slots": 3,
     },
     "arsenal": {
         "label": "🛡️ Arsenal",
-        "wood_cost": 50,
+        "wood_cost": 40,
         "food_cost": 0,
         "description": f"Libera tecnologias para benefício do exército.",
         "effect_value": None,
-        "slots": 2,
+        "slots": 3,
     }
 }
 
@@ -147,7 +147,7 @@ TECHNOLOGIES = {
     "fertilizante": {
         "label": "🪱 Fertilizante",
         "description": "Aumenta a produção de comida em 20%",
-        "gold_cost": 50,
+        "gold_cost": 20,
         "mods": {
             "food_production": 1.2,
         },
@@ -156,10 +156,10 @@ TECHNOLOGIES = {
     },
     "muralhas reforçadas": {
         "label": "🛡️ Muralhas reforçadas",
-        "description": "Aumenta a defesa das muralhas em 20%",
-        "gold_cost": 40,
+        "description": "Aumenta a defesa das muralhas em 50%",
+        "gold_cost": 20,
         "mods": {
-            "wall_defense": 1.2,
+            "wall_defense": 1.5,
         },
         "requisities": [],
         "root_building": 'casa de construção',
@@ -167,7 +167,7 @@ TECHNOLOGIES = {
     "milícia da cidade": {
         "label": "👥 Milícia da Cidade",
         "description": "Diminui o dano de pilhagem em 25%",
-        "gold_cost": 30,
+        "gold_cost": 20,
         "mods": {
             "pilhage_damage": 0.75,
         },
@@ -177,7 +177,7 @@ TECHNOLOGIES = {
     "aço leve": {
         "label": "⚔️ Aço Leve",
         "description": "Unidades se tornam 20% mais baratas de treinar",
-        "gold_cost": 40,
+        "gold_cost": 20,
         "mods": {
             "army_cost": 0.8,
         },
@@ -186,10 +186,10 @@ TECHNOLOGIES = {
     },
     "legião de combate": {
         "label": "⚔️ Legião de Combate",
-        "description": "Unidades se tornam 50% mais baratas de treinar",
-        "gold_cost": 50,
+        "description": "Unidades se tornam 30% mais baratas de treinar",
+        "gold_cost": 20,
         "mods": {
-            "army_cost": 0.5,
+            "army_cost": 0.7,
         },
         "requisities": ["aço leve"],
         "root_building": 'arsenal',
@@ -201,11 +201,11 @@ OPEN_RESIDUALLOSS = 0.2
 OPEN_CRITICALRATIO = 2
 OPEN_DOMINANCERATIO = 3
 
-SIEGE_BLOCKLOSS = 0.2
-SIEGE_ATTACKERLOSS = 0.2
+SIEGE_BLOCKLOSS = 0.1
+SIEGE_ATTACKERLOSS = 0.5
 SIEGE_LOWBLOCKFACTOR = 0.1
-SIEGE_HIGHBLOCKFACTOR = 0.4
+SIEGE_HIGHBLOCKFACTOR = 0.5
 
 PILHAGE_BASELOSS = 0.7
 PILHAGE_DOMINANCERATIO = 3
-PILHAGE_DAMAGEFACTOR = 0.2
+PILHAGE_DAMAGEFACTOR = 0.4
