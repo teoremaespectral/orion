@@ -103,7 +103,7 @@ BUILDINGS = {
     },
     "muro": {
         "label": "🧱 Muro",
-        "wood_cost": 10,
+        "wood_cost": 8,
         "food_cost": 0,
         "description": f"Proteção física. Aumenta a defesa base em +{DEFENSE_PER_WALL}.",
         "effect_value": DEFENSE_PER_WALL,
@@ -119,7 +119,7 @@ BUILDINGS = {
     },
     "casa de construção": {
         "label": "🏗️ Casa de Construção",
-        "wood_cost": 40,
+        "wood_cost": 50,
         "food_cost": 0,
         "description": f"Libera tecnologias de construção e engenharia.",
         "effect_value": None,
@@ -127,7 +127,7 @@ BUILDINGS = {
     },
     "moinho": {
         "label": "🌾 Moinho",
-        "wood_cost": 20,
+        "wood_cost": 50,
         "food_cost": 0,
         "description": f"Libera tecnologias para as fazendas.",
         "effect_value": None,
@@ -135,7 +135,7 @@ BUILDINGS = {
     },
     "arsenal": {
         "label": "🛡️ Arsenal",
-        "wood_cost": 40,
+        "wood_cost": 50,
         "food_cost": 0,
         "description": f"Libera tecnologias para benefício do exército.",
         "effect_value": None,

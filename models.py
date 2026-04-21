@@ -190,7 +190,7 @@ class Bot:
             self.personality = brain_data['personality']
             self.turn_count = brain_data['turn_count']
             self.tactic = brain_data['tactic']
-            self.tactic_type = brain_data['tactic_type']
+            self.order_count = brain_data.get('order_count', 0)
 
     def _setup_new_bot(self):
         '''Configura um novo bot com uma civilização e personalidade específicas, e inicializa suas táticas e contagem de turnos. Este método é chamado quando não há dados pré-existentes para o bot, garantindo que ele seja criado com uma configuração limpa e consistente.'''
@@ -198,24 +198,43 @@ class Bot:
         self.personality = 'dumb'
         self.turn_count = 1
         self.tactic = []
-        self.tactic_type = None
+        self.order_count = 0
 
     def to_dict(self):
         """Transforma as informações contidas na instância em um dicionário"""
         return {
             "civ" : self.civ,
             "personality" : self.personality,
+            "turn_count" : self.turn_count,
             "tactic" : self.tactic,
-            "tactic_type" : self.tactic_type,
+            "order_count" : self.order_count
+
         }
+    
+    def _new_tactic(self):
+        '''Gera uma nova tática para o bot com base em sua personalidade e no estado atual do reino. Este método é chamado quando o bot precisa de uma nova sequência de ações para seguir, e utiliza a função get_ai_tactic de AI_logic para determinar a tática mais adequada para a situação atual.'''
+        self.order_count += 1
+
+        if self.personality == 'dumb':
+            self.tactic = AI_logic.dumb_strategy(self.order_count)
+
+        elif self.personality == 'turtle':
+            self.tactic = AI_logic.turtle_strategy(self.order_count)
+
+        elif self.personality == 'rusher':
+            self.tactic = AI_logic.rusher_strategy(self.order_count)
+        
+        elif self.personality == 'greedy':
+            self.tactic = AI_logic.greedy_strategy(self.order_count)
 
     def get_next_action(self, kingdom):
         '''Determina a próxima ação do bot com base em sua personalidade e no estado atual do reino. Se o bot não tiver táticas definidas, ele chama a função get_ai_tactic de AI_logic para obter uma nova tática com base em sua personalidade e no estado do reino. Em seguida, ele retorna a próxima ação a ser executada, que inclui o tipo de ação e o alvo da ação.'''
         if self.tactic == []:
-            self.tactic_type, self.tactic = AI_logic.get_ai_tactic(self.personality, kingdom)
+            self._new_tactic()
     
-        action_target = self.tactic.pop(0)
-        return {"type": self.tactic_type, "target": action_target}
+        type, target = self.tactic.pop(0)
+        self.turn_count += 1
+        return {"type": type, "target": target}
 
     
 
