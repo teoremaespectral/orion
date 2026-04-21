@@ -13,7 +13,7 @@ def BUILD_BUTTON(player):
     for building_name, info in c.BUILDINGS.items():
 
         icon = "🔨" if player.can_build(building_name) else "🚫"
-        text = f"{icon} {info['label']} (🍎{info['food_cost']} 🪵{info['wood_cost']})"
+        text = f"{icon} {info['label']} (🍎{info['food_cost']} 🪵{info['wood_cost']} 💰{info.get('gold_cost', 0)})"
         button.append(text)
     return button
 

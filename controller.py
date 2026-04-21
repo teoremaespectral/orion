@@ -113,7 +113,7 @@ class Game:
             if self.player_kingdom.train_army():
                 action['success'] = True
         elif a_type == "attack":
-            if self.player.army > 0:
+            if self.player_kingdom.army > 0:
                 action['success'] = True
         
         return action
@@ -135,7 +135,7 @@ class Game:
             if self.ai_kingdom.research(a_target):
                 ai_action['success'] = True
         elif a_type == "army":
-            if self.ai.train_army():
+            if self.ai_kingdom.train_army():
                 ai_action['success'] = True
         elif a_type == "attack":
             if self.ai_kingdom.army > 0:
