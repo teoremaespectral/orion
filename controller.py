@@ -46,7 +46,7 @@ class Game:
 
         save_db(self.db_data, 'games_data')
 
-    def setup(self, player_civ="Teresópolis", ai_civ="Petrópolis", strategy="Aleatório"):
+    def setup(self, player_civ="Teresópolis", ai_civ="Petrópolis", strategy="aleatório"):
         '''Configura o jogo para um novo usuário, definindo as civilizações do jogador e da IA, bem como a estratégia da IA. Garante que os reinos sejam criados com os bônus e modificadores corretos de acordo com as civilizações escolhidas. Salva o estado inicial do jogo no banco de dados.'''
         # Garante que criamos reinos limpos com a civ correta
         self.player_kingdom = Kingdom(self.user_id, self.user_name)
@@ -58,7 +58,6 @@ class Game:
         self.ai_brain = Bot()
         self.ai_brain.civ = ai_civ
         self.ai_brain.personality = strategy
-        self.ai_brain.name = f"Bot {ai_civ}"
         
         self.save()
 

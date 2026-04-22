@@ -47,7 +47,7 @@ def get_build_keyboard(player):
     for label in txt.BUILD_BUTTON(player):
         keys.append([KeyboardButton(text=label)])
     
-    keys.append([KeyboardButton(text="🔙 Voltar")])
+    keys.append([KeyboardButton(text="⬅️ Voltar")])
     return ReplyKeyboardMarkup(keyboard=keys, resize_keyboard=True)
 
 def get_research_keyboard(player):
@@ -99,7 +99,7 @@ def handle_setup_flow(m: M):
         if m.text in strategies:
             p_civ = user_setup[m.user_id]["player_civ"]
             a_civ = user_setup[m.user_id]["ai_civ"]
-            strategy = m.text
+            strategy = m.text.lower()
             game = Game(m.user_id, m.user_name)
             game.setup(player_civ=p_civ, ai_civ=a_civ, strategy=strategy)
             del user_setup[m.user_id]
@@ -115,15 +115,16 @@ def handle_menu_navigation(m: M):
     game = Game(m.user_id, m.user_name)
     
     if m.text == "🏗️ Construções":
-        text = txt.BUILD_MENU_MSG(game.player)
-        send_message(m.chat_id, text, reply_markup=get_build_keyboard(game.player))
+        text = txt.BUILD_MENU_MSG(game.player_kingdom)
+        send_message(m.chat_id, text, reply_markup=get_build_keyboard(game.player_kingdom))
         return True
     
     if m.text == "🔬 Pesquisar":
-        text = txt.RESEARCH_MENU_MSG(game.player)
-        send_message(m.chat_id, text, reply_markup=get_research_keyboard(game.player))
+        text = txt.RESEARCH_MENU_MSG(game.player_kingdom)
+        send_message(m.chat_id, text, reply_markup=get_research_keyboard(game.player_kingdom))
+        return True
 
-    if m.text == "🔙 Voltar":
+    if m.text == "⬅️ Voltar":
         send_message(m.chat_id, "Retornando ao conselho real...", reply_markup=get_main_keyboard())
         return True
 
@@ -132,7 +133,7 @@ def show_status(m: M):
     '''Exibe o status atual do reino do jogador, incluindo recursos, força militar, integridade e outras informações relevantes para a tomada de decisões estratégicas.'''
     if m.command == "/status" or m.text == "📊 Status":
         game = Game(m.user_id, m.user_name)
-        player = game.player
+        player = game.player_kingdom
         
         texto = txt.STATUS_MSG(player, game.turn_count)
         send_message(m.chat_id, texto, reply_markup=get_main_keyboard())

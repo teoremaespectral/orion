@@ -1,7 +1,6 @@
 import constants as c
 from math import prod
-
-from orion import AI_logic
+import AI_logic
 
 class Kingdom:
     '''Representa o estado de um reino, incluindo recursos, construções, exército e vida.'''
@@ -151,9 +150,9 @@ class Kingdom:
         if needs_slot and self.occupied_slots >= self.total_slots:
             return False
         
-        return (self.resources["food"] >= cost["food_cost"] and
-                self.resources["wood"] >= cost["wood_cost"] and
-                self.resources["gold"] >= cost["gold_cost"])
+        return (self.resources["food"] >= cost.get("food_cost", 0) and
+        self.resources["wood"] >= cost.get("wood_cost", 0) and
+        self.resources["gold"] >= cost.get("gold_cost", 0))
     
     def can_research(self, tech_id):
         # 1. Validação básica de existência
