@@ -2,7 +2,9 @@ from secrets import choice
 from Message import Message as M
 from models import Kingdom, Bot, CombatEngine
 from db_utils import get_db, save_db
+from telepot.namedtuple import ReplyKeyboardMarkup, KeyboardButton
 import constants as c
+import display as txt
 class Game:
     def __init__(self, user_id, user_name):
         self.user_id = str(user_id)
@@ -222,3 +224,71 @@ class ActionDispatcher:
             if info['label'] == clean_text:
                 return {"type": "research", "target": t_id}
         return None
+
+class MenuManager:
+    def __init__(self, game):
+        self.game = game
+        self.player = game.player_kingdom
+
+    def _format(self, text, markup):
+        """Padroniza a saída para o handler."""
+        return {"text": text, "markup": markup}
+    
+    # --- Teclados ---
+    def _get_civ_keyboard(self):
+        '''Gera um teclado com as civilizações disponíveis para escolha.'''
+        keys = []
+        for text in txt.CIV_BUTTON:
+            keys.append([KeyboardButton(text=text)])
+        return ReplyKeyboardMarkup(keyboard=keys, resize_keyboard=True, one_time_keyboard=True)
+
+    def _get_strategy_keyboard(self):
+        '''Gera um teclado com as estratégias disponíveis para a IA.'''
+        return ReplyKeyboardMarkup(keyboard=[
+            [KeyboardButton(text="Dumb"), KeyboardButton(text="Rusher")],
+            [KeyboardButton(text="Turtle"), KeyboardButton(text="Greedy")],
+            [KeyboardButton(text="Aleatório")]
+        ], resize_keyboard=True, one_time_keyboard=True)
+
+    def _get_main_keyboard(self):
+        return ReplyKeyboardMarkup(keyboard=[
+            [KeyboardButton(text="🏗️ Construções"), KeyboardButton(text="🔬 Pesquisar")],
+            [KeyboardButton(text="⚔️ Exército"), KeyboardButton(text="🚩 ATACAR")],
+            [KeyboardButton(text="📊 Status"), KeyboardButton(text="ℹ️ Info")]
+        ], resize_keyboard=True)
+    
+    def _get_build_keyboard(self):
+        ''''Gera um teclado para o menu de construção, mostrando quais edificações o jogador pode construir com base em seus recursos atuais.'''
+        keys = []
+        for label in txt.BUILD_BUTTON(self.player):
+            keys.append([KeyboardButton(text=label)])
+        keys.append([KeyboardButton(text="⬅️ Voltar")])
+        return ReplyKeyboardMarkup(keyboard=keys, resize_keyboard=True)
+
+    def _get_research_keyboard(self):
+        options = txt.RESEARCH_BUTTONS(self.player)
+        # Organiza em 2 colunas para não ficar uma lista gigante
+        keyboard = [options[i:i + 2] for i in range(0, len(options), 2)]
+        return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+
+    # --- MENUS ---
+
+    def main_menu(self):
+        text = txt.MAIN_MENU_MSG(self.player)
+        return self._format(text, self._get_main_keyboard())
+
+    def build_menu(self):
+        text = txt.BUILD_MENU_MSG(self.player)
+        return self._format(text, self._get_build_keyboard())
+
+    def research_menu(self):
+        text = txt.RESEARCH_MENU_MSG(self.player)
+        return self._format(text, self._get_research_keyboard())
+
+    def status_menu(self):
+        text = txt.STATUS_MSG(self.player, self.game.turn_count)
+        return self._format(text, self._get_main_keyboard())
+    
+    def info_menu(self):
+        text = txt.INFO_MSG()
+        return self._format(text, self._get_main_keyboard())
