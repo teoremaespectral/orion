@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.3.0] - "Science and Fiction" - 2026-04-23
+### Added
+- Gold as a new resource
+- Gold producer building: Mercado
+- Science research system for unlocking technologies
+- Science buildings: Casa de construção, moinho and arsenal
+- Info menu for detailed game information
+
+### Changed
+- New logic for the game bots: Bot class and build order strategies
+
 ## [1.2.0] - "Houses and barracks" - 2026-04-15
 ### Added
 - Wood as a new resource
