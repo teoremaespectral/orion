@@ -271,7 +271,24 @@ class MenuManager:
         keyboard = [options[i:i + 2] for i in range(0, len(options), 2)]
         return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
-    # --- MENUS ---
+    # --- MENUS DE SETUP ---
+
+    def setup_player_civ_menu(self):
+        """Primeira etapa: Escolha da civilização do jogador."""
+        text = txt.PLAYER_CIV_SELECT
+        return self._format(text, self._get_civ_keyboard())
+
+    def setup_ai_civ_menu(self):
+        """Segunda etapa: Escolha da civilização do inimigo."""
+        text = txt.AI_CIV_SELECT
+        return self._format(text, self._get_civ_keyboard())
+
+    def setup_strategy_menu(self):
+        """Terceira etapa: Escolha da dificuldade/estratégia da IA."""
+        text = txt.STRATEGY_SELECT
+        return self._format(text, self._get_strategy_keyboard())
+    
+    # --- MENUS PRINCIPAIS ---
 
     def main_menu(self):
         text = txt.MAIN_MENU_MSG(self.player)
