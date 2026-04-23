@@ -178,10 +178,10 @@ class Game:
 
 class ActionDispatcher:
     ''''Classe responsável por interpretar a mensagem do jogador e mapear para a ação correspondente, garantindo que o processo de identificação da intenção do jogador seja centralizado e facilmente gerenciável. Facilita a adição de novas ações no futuro, bastando atualizar o dicionário de triggers e implementar o handler correspondente.'''
-    def __init__(self, m: M):
+    def __init__(self, game: Game, m: M):
         '''Inicializa o dispatcher com a mensagem do jogador e define o mapa de triggers para as ações. O mapa associa cada trigger (como "⚔️" para recrutar exército) a um método específico que processará essa ação.'''
         self.m = m
-        self.game = Game(m.user_id, m.user_name)
+        self.game = game
 
         self.trigger_map = {
             c.ACTION_TRIGGER['army']: self._handle_army,

@@ -1,6 +1,6 @@
 from bot import my_bot
 from Message import Message as M
-from controller import Game
+from controller import Game, ActionDispatcher
 import constants as c
 from telepot.namedtuple import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 import display as txt
@@ -150,27 +150,9 @@ def handle_actions(m: M):
     game = Game(m.user_id, m.user_name)
     if game.status != "active": return
 
-    action = {"type": None, "target": None}
+    action = ActionDispatcher(game, m).resolve()
 
-    # IDENTIFICAR AÇÃO POR DICIONÁRIO
-    if "⚔️" in m.text:
-        action = {"type": "army", "target": None}
-    elif "ATACAR" in m.text:
-        action = {"type": "attack", "target": "invasion"}
-    elif "🔨" in m.text:
-        for b_id, info in c.BUILDINGS.items():
-            if info['label'] in m.text:
-                action = {"type": "build", "target": b_id}
-                break
-    elif "🧪" in m.text:
-        for t_id, info in c.TECHNOLOGIES.items():
-            if info['label'] in m.text:
-                action = {"type": "research", "target": t_id}
-                break
-    elif "🚫" in m.text:
-        send_message(m.chat_id, txt.WRONG_ACTION, reply_markup=get_main_keyboard())
-
-    if action["type"]:
+    if action:
         report = game.play_turn(action) # Executa o turno completo
         
         # 1. Cabeçalho do Turno
