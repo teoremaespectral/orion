@@ -40,6 +40,10 @@ INITIAL_BUILDINGS = {
     'serraria' : 0,
     'quartel' : 0,
     'muro' : 5,
+    'mercado': 0,
+    'moinho': 0,
+    'arsenal': 0,
+    'casa de construção': 0
 }
 INITIAL_SLOTS = 0
 

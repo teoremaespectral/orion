@@ -46,7 +46,7 @@ TACTICS = {
     ],
     'barrack_and_train': [
         [('build', 'quartel'), ('army', 'train_soldiers'), ('army', 'train_soldiers')],
-        [('build', 'quartel'), ('train', 'train_soldiers'), ('train', 'train_soldiers'), ('train', 'train_soldiers')],
+        [('build', 'quartel'), ('army', 'train_soldiers'), ('army', 'train_soldiers'), ('army', 'train_soldiers')],
     ],
     'build_a_house': [[('build', 'casa')]],
     'build_a_farm': [[('build', 'fazenda')]],
@@ -74,13 +74,13 @@ def get_tactic(tactic_name):
 def dumb_strategy(count):
     ''' Estratégia simples que segue uma ordem fixa de construção. '''
     if count == 1:
-        return 'first_moves'
+        return get_tactic('first_moves')
     elif count == 2:
-        return 'early_food'
+        return get_tactic('early_food')
     elif count == 3:
-        return 'early_wood'
+        return get_tactic('early_wood')
     else:
-        return choice(TACTICS.keys())
+        return get_tactic(choice(TACTICS.keys()))
     
 def turtle_strategy(count):
     ''' Estratégia defensiva que prioriza a construção de muros e o fortalecimento das defesas. '''
@@ -100,7 +100,7 @@ def turtle_strategy(count):
         12: 'research walls'
     }
 
-    if count in build_order:
+    if count in build_order.keys():
         return get_tactic(build_order[count])
 
     late_game_cycle = {
@@ -124,7 +124,7 @@ def rusher_strategy(count):
         7: 'attack',
     }
 
-    if count in build_order:
+    if count in build_order.keys():
         return get_tactic(build_order[count])
 
     late_game_cycle = {
@@ -148,7 +148,7 @@ def greedy_strategy(count):
         7: 'research_army',
     }
 
-    if count in build_order:
+    if count in build_order.keys():
         return get_tactic(build_order[count])
 
     late_game_cycle = {
