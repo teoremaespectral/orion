@@ -1,5 +1,4 @@
 from random import choice, choices
-from utils import is_too_little, is_too_much
 import constants as c
 
 # --- SENSORES ---
@@ -30,238 +29,133 @@ def out_of_army(ai):
 
 # --- TÁTICAS DE CONSTRUÇÃO ---
 
-BUILD_TACTICS = {
-    'make_a_house': [
-        ['casa'],
+TACTICS = {
+    'first_moves': [
+        [('build', 'fazenda'), ('build', 'serraria'), ('build', 'casa')],
+        [('build', 'serraria'), ('build', 'fazenda'), ('build', 'casa')],
     ],
-    'make_some_houses': [
-        ['casa', 'casa'],
-        ['casa', 'casa', 'casa'],
+    'early_food': [[('build', 'fazenda'), ('build', 'fazenda'), ('build', 'fazenda'), ('build', 'casa')]],
+    'early_wood': [[('build', 'serraria'), ('build', 'serraria'), ('build', 'serraria'), ('build', 'casa')]],
+    'build_walls': [
+        [('build', 'muro'), ('build', 'muro')],
+        [('build', 'muro'), ('build', 'casa'), ('build', 'muro')],
     ],
-    'make_some_farms': [
-        ['fazenda', 'fazenda'],
-        ['fazenda', 'fazenda', 'fazenda'],
+    'train_soldiers': [
+        [('army', 'train_some_soldiers')],
+        [('army', 'train_some_soldiers'), ('army', 'train_some_soldiers')],
     ],
-    'make_lots_of_farms': [
-        ['fazenda', 'fazenda', 'fazenda', 'fazenda'],
-        ['fazenda', 'fazenda', 'fazenda', 'fazenda', 'fazenda'],
+    'barrack_and_train': [
+        [('build', 'quartel'), ('army', 'train_soldiers'), ('army', 'train_soldiers')],
+        [('build', 'quartel'), ('army', 'train_soldiers'), ('army', 'train_soldiers'), ('army', 'train_soldiers')],
     ],
-    'make_some_sawmills': [
-        ['serraria', 'serraria'],
-        ['serraria', 'serraria', 'serraria'],
+    'build_a_house': [[('build', 'casa')]],
+    'build_a_farm': [[('build', 'fazenda')]],
+    'build_a_sawmill': [[('build', 'serraria')]],
+    'make_a_market': [[('build', 'mercado')]],
+    'attack': [
+        [('attack', 'attack')],
+        [('attack', 'attack'), ('attack', 'attack')],
     ],
-    'make_lots_of_sawmills': [
-        ['serraria', 'serraria', 'serraria', 'serraria'],
-        ['serraria', 'serraria', 'serraria', 'serraria', 'serraria'],
-    ],
-    'make_some_barracks': [
-        ['quartel', 'quartel'],
-        ['quartel', 'quartel', 'quartel'],
-    ],
-    'make_lots_of_barracks': [
-        ['quartel', 'quartel', 'quartel', 'quartel'],
-        ['quartel', 'quartel', 'quartel', 'quartel', 'quartel'],
-    ],
-    'make_a_wall': [
-        ['muro'],
-    ],
+    'early_gold': [[('build', 'mercado'), ('build', 'serraria'), ('build', 'serraria'), ('build', 'casa')]],
+    'casa de construção': [[('build', 'casa de construção'), ('build', 'casa')]],
+    'moinho de vento': [[('build', 'moinho'), ('build', 'casa')]],
+    'arsenal': [[('build', 'arsenal'), ('build', 'casa')]],
+    'research walls': [[('research', 'muralhas reforçadas')]],
+    'research_army': [[('research', 'aço leve'), ('research', 'legião de combate')]],
 }
 
-ARMY_TACTICS = {
-    'train_some_soldiers': [
-        ['train_army'],
-        ['train_army', 'train_army'],
-    ],
-    'train_lots_of_soldiers': [
-        ['train_army', 'train_army', 'train_army'],
-        ['train_army', 'train_army', 'train_army', 'train_army'],
-    ],
-}
+def get_tactic(tactic_name):
+    ''' Retorna uma tática pré-definida, que é uma sequência de ações a serem tomadas. '''
+    options = TACTICS.get(tactic_name, [[('build', 'casa')]])
+    return choice(options).copy()
 
-ATTACK_TACTICS = {
-    'make_a_attack': [
-        ['attack'],
-    ],
-    'make_some_attacks': [
-        ['attack', 'attack'],
-        ['attack', 'attack', 'attack'],
-    ],
-}
+#BUILD ORDERS
 
-def get_tactic_sequence(category, tactic_name):
-    '''
-    Busca uma sequência de ações baseada na categoria (BUILD, ARMY, ATTACK)
-    e no nome da tática escolhida pela estratégia.
-    '''
-    categories = {
-        'build': BUILD_TACTICS,
-        'army': ARMY_TACTICS,
-        'attack': ATTACK_TACTICS
+def dumb_strategy(count):
+    ''' Estratégia simples que segue uma ordem fixa de construção. '''
+    if count == 1:
+        return get_tactic('first_moves')
+    elif count == 2:
+        return get_tactic('early_food')
+    elif count == 3:
+        return get_tactic('early_wood')
+    else:
+        return get_tactic(choice(TACTICS.keys()))
+    
+def turtle_strategy(count):
+    ''' Estratégia defensiva que prioriza a construção de muros e o fortalecimento das defesas. '''
+
+    build_order = {
+        1: 'first_moves',
+        2: 'early_wood',
+        3: 'build_walls',
+        4: 'build_walls',
+        5: 'early_food',
+        6: 'barrack_and_train',
+        7: 'attack',
+        8: 'early_gold',
+        9: 'early_wood',
+        10: 'build_walls',
+        11: 'casa de construção',
+        12: 'research walls'
+    }
+
+    if count in build_order.keys():
+        return get_tactic(build_order[count])
+
+    late_game_cycle = {
+        0: 'build_walls',
+        1: 'barrack_and_train',
+        2: 'attack'
     }
     
-    # Busca a categoria, depois a tática. Se não achar, retorna uma lista padrão segura.
-    tactic_dict = categories.get(category, BUILD_TACTICS)
-    sequence = choice(tactic_dict.get(tactic_name, [["casa"]])).copy()
-    return category, sequence
+    return get_tactic(late_game_cycle[count % 3])
 
-def dumb_strategy(ai):
-    ''' Uma estratégia "burra" que prioriza a construção de casas quando os slots estão baixos, depois serrarias se a madeira estiver baixa, e depois escolhe aleatoriamente entre construir, treinar ou atacar. '''
-    # Sensores de sobrevivência (O cérebro reptiliano da IA)
-    if needs_slots(ai):
-        return get_tactic_sequence('build', 'make_a_house')
-    if needs_wood(ai):
-        return get_tactic_sequence('build', 'make_some_sawmills')
-    
-    # Decisão aleatória (A parte "Burra")
-    category = choice(['build', 'army', 'attack'])
-    
-    if category == 'build':
-        tactic = choice(list(BUILD_TACTICS.keys()))
-    elif category == 'army':
-        tactic = choice(list(ARMY_TACTICS.keys()))
-    else:
-        tactic = choice(list(ATTACK_TACTICS.keys()))
-        
-    return get_tactic_sequence(category, tactic)
+def rusher_strategy(count):
+    ''' Estratégia agressiva que prioriza o ataque e o treinamento de soldados. '''
 
-def rusher_strategy(ai):
-    '''Uma estratégia agressiva que prioriza o ataque constante, mas ainda tenta manter um mínimo de exército e economia para sustentar a ofensiva. '''
-
-    if has_little_army(ai):
-        if needs_slots(ai):
-            return get_tactic_sequence('build', 'make_a_house')
-        
-        if needs_wood(ai):
-            return get_tactic_sequence('build', 'make_some_sawmills')
-    
-        if needs_food(ai):
-            return get_tactic_sequence('build', 'make_some_farms')
-    
-        if has_few_barracks(ai):
-            return get_tactic_sequence('build', 'make_some_barracks')
-    
-        if out_of_army(ai):
-            return get_tactic_sequence('army', 'train_some_soldiers')
-        
-        tactic_type, tactic_name = choice([
-            ['build','make_some_barracks'], 
-            ['army','train_some_soldiers'],
-            ['attack','make_a_attack']
-            ])
-        return get_tactic_sequence(tactic_type, tactic_name)
-    
-    else:
-        tactic_type, tactic_name = choices([
-            ['army','train_some_soldiers'],
-            ['build', 'make_some_barracks'],
-            ['attack','make_a_attack'],
-            ['attack','make_some_attacks'],
-            ], weights=[10, 10, 50, 30]
-            )[0]
-        return get_tactic_sequence(tactic_type, tactic_name)
-    
-def turtle_strategy(ai):
-    '''Uma estratégia defensiva que prioriza a construção de defesas e o fortalecimento do exército antes de considerar ataques.'''
-
-    if has_little_army(ai, c.MUCH_ARMY):
-        if needs_slots(ai):
-            return get_tactic_sequence('build', 'make_a_house')
-        if needs_wood(ai, c.MUCH_WOOD):
-            return get_tactic_sequence('build', 'make_some_sawmills')
-    
-        if needs_food(ai):
-            return get_tactic_sequence('build', 'make_some_farms')
-    
-        if has_few_barracks(ai):
-            return get_tactic_sequence('build', 'make_some_barracks')
-    
-        if out_of_army(ai):
-            return get_tactic_sequence('army', 'train_some_soldiers')
-        
-        tactic_type, tactic_name = choice([
-            ['build','make_some_barracks'], 
-            ['army','train_some_soldiers'],
-            ['army','train_lots_of_soldiers'],
-            ])
-        return get_tactic_sequence(tactic_type, tactic_name)
-    
-    else:
-
-        if needs_food(ai, c.MUCH_FOOD):
-            return get_tactic_sequence('build', 'make_some_farms')
-        
-        if needs_wood(ai, c.MUCH_WOOD):
-            return get_tactic_sequence('build', 'make_some_sawmills')
-        
-        tactic_type, tactic_name = choices([
-            ['army','train_lots_of_soldiers'],
-            ['build', 'make_lots_of_barracks'],
-            ['build', 'make_lots_of_sawmills'],
-            ['build', 'make_a_wall'],
-            ['attack','make_a_attack'],
-            ['attack','make_some_attacks'],
-            ], weights=[20, 5, 5, 50, 10, 10])[0]
-        return get_tactic_sequence(tactic_type, tactic_name)
-
-def greedy_strategy(ai):
-    '''Uma estratégia que tenta maximizar a economia e o exército antes de lançar ataques massivos. Pode ser arriscada, mas se funcionar, pode esmagar o oponente com uma ofensiva esmagadora.'''
-    
-    if needs_food(ai, c.LOTS_OF_FOOD):
-        if needs_wood(ai):
-            return get_tactic_sequence('build', 'make_some_sawmills')
-    
-        if needs_slots(ai):
-            return get_tactic_sequence('build', 'make_a_house')
-    
-        if needs_food(ai, c.MUCH_FOOD):
-            return get_tactic_sequence('build', 'make_some_farms')
-        
-        tactic_type, tactic_name = choice([
-            ['build','make_some_farms'],
-            ['build','make_lots_of_farms'],
-            ['build', 'make_some_sawmills'],
-            ])
-        return get_tactic_sequence(tactic_type, tactic_name)
-    
-    elif has_little_army(ai, c.LOTS_OF_ARMY):
-        if needs_wood(ai, c.MUCH_WOOD):
-            return get_tactic_sequence('build', 'make_some_sawmills')
-        
-        if has_few_barracks(ai):
-            return get_tactic_sequence('build', 'make_some_barracks')
-        
-        if out_of_army(ai):
-            return get_tactic_sequence('army', 'train_lots_of_soldiers')
-        
-        tactic_type, tactic_name = choice([
-            ['build','make_some_barracks'],
-            ['build','make_lots_of_barracks'],
-            ['army','train_some_soldiers'],
-            ['army','train_lots_of_soldiers'],
-            ])
-        return get_tactic_sequence(tactic_type, tactic_name)
-    
-    else:
-        
-        tactic_type, tactic_name = choices([
-            ['army','train_lots_of_soldiers'],
-            ['build', 'make_lots_of_barracks'],
-            ['build', 'make_some_farms'],
-            ['build', 'make_lots_of_farms'],
-            ['attack','make_a_attack'],
-            ['attack','make_some_attacks'],
-            ], weights=[5, 5, 5, 5, 40, 40])[0]
-        return get_tactic_sequence(tactic_type, tactic_name)
-
-
-
-def get_ai_tactic(strategy_name, ai):
-    '''Dada a escolha da estratégia, retorna a sequência de ações que a IA deve executar.'''
-    strategies = {
-        'dumb': dumb_strategy,
-        'rusher': rusher_strategy,
-        'turtle': turtle_strategy,
-        'greedy': greedy_strategy,
+    build_order = {
+        1: 'first_moves',
+        2: 'early_food',
+        3: 'early_wood',
+        4: 'barrack_and_train',
+        5: 'barrack_and_train',
+        6: 'train_soldiers',
+        7: 'attack',
     }
-    strategy_func = strategies.get(strategy_name, dumb_strategy)
-    return strategy_func(ai)
+
+    if count in build_order.keys():
+        return get_tactic(build_order[count])
+
+    late_game_cycle = {
+        0: 'barrack_and_train',
+        1: 'attack',
+        2: 'barrack_and_train',
+    }
+    
+    return get_tactic(late_game_cycle[count % 3])
+
+def greedy_strategy(count):
+    ''' Estratégia que prioriza a construção de edifícios que aumentam a produção de recursos, como fazendas e serrarias. '''
+
+    build_order = {
+        1: 'first_moves',
+        2: 'early_food',
+        3: 'early_wood',
+        4: 'early_gold',
+        5: 'build_walls',
+        6: 'arsenal',
+        7: 'research_army',
+    }
+
+    if count in build_order.keys():
+        return get_tactic(build_order[count])
+
+    late_game_cycle = {
+        0: 'train_soldiers',
+        1: 'attack',
+        2: 'barrack_and_train',
+        3: 'barrack_and_train'
+    }
+    
+    return get_tactic(late_game_cycle[count % 4])

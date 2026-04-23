@@ -13,9 +13,24 @@ def BUILD_BUTTON(player):
     for building_name, info in c.BUILDINGS.items():
 
         icon = "🔨" if player.can_build(building_name) else "🚫"
-        text = f"{icon} {info['label']} (🍎{info['food_cost']} 🪵{info['wood_cost']})"
+        text = f"{icon} {info['label']} (🍎{info['food_cost']} 🪵{info['wood_cost']} 💰{info.get('gold_cost', 0)})"
         button.append(text)
     return button
+
+def RESEARCH_BUTTONS(player):
+    buttons = []
+    for t_id, info in c.TECHNOLOGIES.items():
+        # Só mostra se não pesquisou E se tem os pré-requisitos técnicos
+        if t_id not in player.searched_techs:
+            has_root = player.buildings.get(info['root_building'], 0) > 0
+            has_reqs = all(r in player.searched_techs for r in info.get('requisities', []))
+            
+            if has_root and has_reqs:
+                icon = "🧪" if player.resources.get('gold', 0) >= info['gold_cost'] else "🚫"
+                buttons.append(f"{icon} {info['label']}")
+    
+    buttons.append("⬅️ Voltar")
+    return buttons
 
 def WAR_START(p_civ, a_civ, strategy):
     texto = (
@@ -27,7 +42,6 @@ def WAR_START(p_civ, a_civ, strategy):
     return texto
 
 def BUILD_MENU_MSG(player):
-    # Cabeçalho padrão
     texto = (
         "🏗️ **CANTEIRO DE OBRAS**\n\n"
         f"Recursos: 🍎 {player.resources['food']} | 🪵 {player.resources['wood']} | 💰 {player.resources.get('gold', 0)}\n"
@@ -35,13 +49,28 @@ def BUILD_MENU_MSG(player):
         "────────────────────\n"
     )
 
-    # Loop para listar cada construção e seu efeito
     for b_id, info in c.BUILDINGS.items():
         texto += f"*{info['label']}*\n"
         texto += f"└ {info['description']}\n\n"
 
     texto += "Escolha o que deseja edificar:"
     return texto
+
+def RESEARCH_MENU_MSG(player):
+    texto = (
+        "🔬 **CENTRO DE PESQUISAS**\n\n"
+        f"Tesouro: 💰 {player.resources.get('gold', 0)} ouro\n"
+        "────────────────────\n"
+    )
+    
+    # Filtragem inteligente para o texto de ajuda
+    for t_id, info in c.TECHNOLOGIES.items():
+        if player.can_research(t_id) or (t_id not in player.searched_techs and 
+            player.buildings.get(info['root_building'], 0) > 0):
+            status = "✅ Já pesquisado" if t_id in player.searched_techs else f"💰 Custo: {info['gold_cost']}"
+            texto += f"*{info['label']}*\n└ {info['description']}\n_{status}_\n\n"
+            
+    return texto + "O que deseja descobrir?"
 
 def STATUS_MSG(player, turn):
     texto = (
@@ -65,6 +94,17 @@ def STATUS_MSG(player, turn):
         f"\n────────────────────\n"
     )
     return texto
+
+def INFO_MSG():
+    return (
+        "📖 **GUIA DO SOBERANO**\n\n"
+        "🏠 **Casas**: Liberam slots para novas construções.\n"
+        "🌱 **Fazendas**: Geram comida (🍎) para tropas e expansão.\n"
+        "🪚 **Serrarias**: Geram madeira (🪵) para obras e muros.\n"
+        "🛒 **Mercado**: Gera ouro (💰) para pesquisas científicas.\n"
+        "🔬 **Pesquisas**: Melhoram a eficiência de tudo no seu reino!\n\n"
+        "Dica: Teresópolis tem bônus de defesa em muralhas! 🏔️"
+    )
 
 NO_ACTIVE_GAME = "⚠️ Não há um jogo ativo. Use /start para iniciar uma nova partida."
 
