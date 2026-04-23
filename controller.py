@@ -1,3 +1,5 @@
+from secrets import choice
+
 from models import Kingdom, Bot, CombatEngine
 from db_utils import get_db, save_db
 
@@ -57,8 +59,11 @@ class Game:
 
         self.ai_brain = Bot()
         self.ai_brain.civ = ai_civ
+
+        if strategy == "aleatório":
+            strategy = choice(["dumb", "rusher", "turtle", "greedy"])
+    
         self.ai_brain.personality = strategy
-        
         self.save()
 
     def play_turn(self, action):
