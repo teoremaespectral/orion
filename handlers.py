@@ -153,7 +153,7 @@ def handle_actions(m: M):
     action = {"type": None, "target": None}
 
     # IDENTIFICAR AÇÃO POR DICIONÁRIO
-    if "Treinar Exército" in m.text:
+    if "⚔️" in m.text:
         action = {"type": "army", "target": None}
     elif "ATACAR" in m.text:
         action = {"type": "attack", "target": "invasion"}
