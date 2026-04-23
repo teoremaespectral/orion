@@ -1,8 +1,8 @@
 from secrets import choice
-
+from Message import Message as M
 from models import Kingdom, Bot, CombatEngine
 from db_utils import get_db, save_db
-
+import constants as c
 class Game:
     def __init__(self, user_id, user_name):
         self.user_id = str(user_id)
@@ -175,3 +175,50 @@ class Game:
         elif self.ai_kingdom.life <= 0:
             self.status = "player_won"
         return
+
+class ActionDispatcher:
+    ''''Classe responsável por interpretar a mensagem do jogador e mapear para a ação correspondente, garantindo que o processo de identificação da intenção do jogador seja centralizado e facilmente gerenciável. Facilita a adição de novas ações no futuro, bastando atualizar o dicionário de triggers e implementar o handler correspondente.'''
+    def __init__(self, m: M):
+        '''Inicializa o dispatcher com a mensagem do jogador e define o mapa de triggers para as ações. O mapa associa cada trigger (como "⚔️" para recrutar exército) a um método específico que processará essa ação.'''
+        self.m = m
+        self.game = Game(m.user_id, m.user_name)
+
+        self.trigger_map = {
+            c.ACTION_TRIGGER['army']: self._handle_army,
+            c.ACTION_TRIGGER['attack']: self._handle_attack,
+            c.ACTION_TRIGGER['build']: self._handle_build,
+            c.ACTION_TRIGGER['research']: self._handle_research
+        }
+
+    def resolve(self):
+        '''Percorre o mapa de triggers para identificar qual ação corresponde à mensagem do jogador. Se a mensagem começar com um dos triggers definidos, o método associado será chamado para processar a ação. Retorna um dicionário com o tipo e alvo da ação, ou None se nenhum trigger for identificado.'''
+        for trigger, handler in self.trigger_map.items():
+            if self.m.text.startswith(trigger):
+                return handler()
+        return None
+    
+    def _handle_army(self):
+        '''Processa a ação de recrutar exército, retornando um dicionário indicando que o tipo da ação é "army" e que não há um alvo específico. O sucesso ou falha dessa ação será determinado posteriormente no processo de execução do turno.'''
+        return {"type": "army", "target": None}
+    
+    def _handle_attack(self):
+        '''Processa a ação de ataque, retornando um dicionário indicando que o tipo da ação é "attack" e que o alvo é "invasion". O sucesso ou falha dessa ação será determinado posteriormente no processo de execução do turno.'''
+        return {"type": "attack", "target": "invasion"}
+    
+    def _handle_build(self):
+        ''''Processa a ação de construção, extraindo o nome do edifício da mensagem do jogador e comparando com os rótulos dos edifícios definidos nas constantes. Retorna um dicionário indicando que o tipo da ação é "build" e o alvo é o ID do edifício correspondente. Se nenhum edifício for identificado, retorna None.'''
+        clean_text = self.m.text.replace(c.ACTION_TRIGGER['build'], "").split('(')[0].strip()
+        
+        for b_id, info in c.BUILDINGS.items():
+            if info['label'] == clean_text:
+                return {"type": "build", "target": b_id}
+        return None
+
+    def _handle_research(self):
+        '''Processa a ação de pesquisa, extraindo o nome da tecnologia da mensagem do jogador e comparando com os rótulos das tecnologias definidas nas constantes. Retorna um dicionário indicando que o tipo da ação é "research" e o alvo é o ID da tecnologia correspondente. Se nenhuma tecnologia for identificada, retorna None.'''
+        clean_text = self.m.text.replace(c.ACTION_TRIGGER['research'], "").strip()
+        
+        for t_id, info in c.TECHNOLOGIES.items():
+            if info['label'] == clean_text:
+                return {"type": "research", "target": t_id}
+        return None

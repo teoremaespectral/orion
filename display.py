@@ -2,6 +2,13 @@ import constants as c
 
 # --- MENSAGENS DE INTERFACE ---
 
+ACTION_TRIGGER = {
+            'army': "⚔️",
+            'attack': "🚩",
+            'build': "🔨",
+            'research': "🧪",
+        }
+
 PLAYER_CIV_SELECT = f"Saudações, Soberano! 🏰\n\nEscolha a sua Civilização:"
 AI_CIV_SELECT = "Ótima escolha! Agora, qual será a Civilização do Inimigo?"
 STRATEGY_SELECT = "E qual será a postura estratégica do oponente?"
