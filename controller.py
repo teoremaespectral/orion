@@ -87,7 +87,7 @@ class Game:
 
         # 3. Checa se há combate
         fight_data = self.process_fight(player_action, ai_action)
-    
+
         # 4. Produção (Turno passa para ambos)
         self.player_kingdom.produce_resources()
         self.ai_kingdom.produce_resources()
@@ -196,7 +196,6 @@ class ActionDispatcher:
         '''Percorre o mapa de triggers para identificar qual ação corresponde à mensagem do jogador. Se a mensagem começar com um dos triggers definidos, o método associado será chamado para processar a ação. Retorna um dicionário com o tipo e alvo da ação, ou None se nenhum trigger for identificado.'''
         for trigger, handler in self.trigger_map.items():
             if self.m.text.startswith(trigger):
-                print(f"Passo 5: Ação identificada - {handler.__name__}")
                 return handler()
         return None
     
@@ -210,7 +209,7 @@ class ActionDispatcher:
     
     def _handle_build(self):
         '''Processa a ação de construção, extraindo o nome do edifício da mensagem do jogador e comparando com os rótulos dos edifícios definidos nas constantes. Retorna um dicionário indicando que o tipo da ação é "build" e o alvo é o ID do edifício correspondente. Se nenhum edifício for identificado, retorna None.'''
-        clean_text = self.m.text.replace(c.ACTION_TRIGGER['build'], "").split('(')[0].strip()
+        clean_text = self.m.text.replace(txt.ACTION_TRIGGER['build'], "").split('(')[0].strip()
         
         for b_id, info in c.BUILDINGS.items():
             if info['label'] == clean_text:
@@ -219,7 +218,7 @@ class ActionDispatcher:
 
     def _handle_research(self):
         '''Processa a ação de pesquisa, extraindo o nome da tecnologia da mensagem do jogador e comparando com os rótulos das tecnologias definidas nas constantes. Retorna um dicionário indicando que o tipo da ação é "research" e o alvo é o ID da tecnologia correspondente. Se nenhuma tecnologia for identificada, retorna None.'''
-        clean_text = self.m.text.replace(c.ACTION_TRIGGER['research'], "").strip()
+        clean_text = self.m.text.replace(txt.ACTION_TRIGGER['research'], "").strip()
         
         for t_id, info in c.TECHNOLOGIES.items():
             if info['label'] == clean_text:
