@@ -16,18 +16,20 @@ STRATEGY_SELECT = "E qual será a postura estratégica do oponente?"
 CIV_BUTTON = [f"{info['label']} - {info['bonus']}" for name, info in c.CIVS.items()]
 
 def BUILD_BUTTON(player):
+    '''Gera os botões de construção com ícones de disponibilidade'''
     button = []
     for building_name, info in c.BUILDINGS.items():
 
         icon = "🔨" if player.can_build(building_name) else "🚫"
-        text = f"{icon} {info['label']} (🍎{info['food_cost']} 🪵{info['wood_cost']} 💰{info.get('gold_cost', 0)})"
+        text = f"{icon} {info['label']} (🍎{info['food_cost']} 🪵{info['wood_cost']})"
         button.append(text)
     return button
 
 def RESEARCH_BUTTONS(player):
+    '''Gera os botões de pesquisa com ícones de disponibilidade'''
     buttons = []
     for t_id, info in c.TECHNOLOGIES.items():
-        # Só mostra se não pesquisou E se tem os pré-requisitos técnicos
+
         if t_id not in player.searched_techs:
             has_root = player.buildings.get(info['root_building'], 0) > 0
             has_reqs = all(r in player.searched_techs for r in info.get('requisities', []))
@@ -40,15 +42,27 @@ def RESEARCH_BUTTONS(player):
     return buttons
 
 def WAR_START(p_civ, a_civ, strategy):
+    '''Gera a mensagem de início de guerra com detalhes da configuração escolhida'''
     texto = (
         "🚩 **GUERRA DECLARADA!**\n\n"
         f"Sua Civ: *{c.CIVS[p_civ]['label']}*\n"
         f"Inimigo: *{c.CIVS[a_civ]['label']}*\n"
-        f"Estratégia: *{strategy}*\n"
+    )
+    return texto
+
+def MAIN_MENU_MSG(player):
+    '''Gera a mensagem do menu principal com detalhes dos recursos e opções disponíveis'''
+    texto = (
+        "🏰 **MENU PRINCIPAL**\n\n"
+        f"Recursos: 🍎 {player.resources['food']} | 🪵 {player.resources['wood']} | 💰 {player.resources.get('gold', 0)}\n"
+        f"Espaço: 🏘️ {player.occupied_slots}/{player.total_slots}\n"
+        "────────────────────\n"
+        "O que deseja fazer?"
     )
     return texto
 
 def BUILD_MENU_MSG(player):
+    '''Gera a mensagem do menu de construção com detalhes dos recursos e espaço'''
     texto = (
         "🏗️ **CANTEIRO DE OBRAS**\n\n"
         f"Recursos: 🍎 {player.resources['food']} | 🪵 {player.resources['wood']} | 💰 {player.resources.get('gold', 0)}\n"
@@ -56,21 +70,17 @@ def BUILD_MENU_MSG(player):
         "────────────────────\n"
     )
 
-    for b_id, info in c.BUILDINGS.items():
-        texto += f"*{info['label']}*\n"
-        texto += f"└ {info['description']}\n\n"
-
     texto += "Escolha o que deseja edificar:"
     return texto
 
 def RESEARCH_MENU_MSG(player):
+    '''Gera a mensagem do menu de pesquisa com detalhes dos recursos e tecnologias disponíveis'''
     texto = (
         "🔬 **CENTRO DE PESQUISAS**\n\n"
         f"Tesouro: 💰 {player.resources.get('gold', 0)} ouro\n"
         "────────────────────\n"
     )
     
-    # Filtragem inteligente para o texto de ajuda
     for t_id, info in c.TECHNOLOGIES.items():
         if player.can_research(t_id) or (t_id not in player.searched_techs and 
             player.buildings.get(info['root_building'], 0) > 0):
@@ -80,6 +90,7 @@ def RESEARCH_MENU_MSG(player):
     return texto + "O que deseja descobrir?"
 
 def STATUS_MSG(player, turn):
+    '''Gera a mensagem de status do reino com detalhes dos recursos, exército e construções'''
     texto = (
         f"👑 **REINO DE {player.user_name}**\n"
         f"🏛️ Civilização: *{c.CIVS[player.civ]['label']}*\n"
@@ -90,37 +101,51 @@ def STATUS_MSG(player, turn):
         f"────────────────────\n"
         f"🍎 Comida: {player.resources['food']}\n"
         f"🪵 Madeira: {player.resources['wood']}\n"
-        f"🏘️ Espaço: {player.occupied_slots}/{player.total_slots}\n"
+        f"💰 Ouro: {player.resources.get('gold', 0)}\n"
+        f"🏘️ Slots: {player.occupied_slots}/{player.total_slots}\n"
         f"────────────────────\n"
         f"🏠 Casas: {player.buildings.get('casa', 0)} | "
         f"🧱 Muros: {player.buildings.get('muro', 0)}\n"
         f"────────────────────\n"
         f"🌱 Fazendas: {player.buildings.get('fazenda', 0)} | "
-        f"🪚 Serrarias: {player.buildings.get('serraria', 0)}"
-        f"🛖 Quarteis: {player.buildings.get('quartel', 0)} | "
+        f"🪚 Serrarias: {player.buildings.get('serraria', 0)} |"
+        f"🛒 Mercado: {player.buildings.get('mercado', 0)} |\n "
+        f"🛖 Quarteis: {player.buildings.get('quartel', 0)} |\n"
         f"\n────────────────────\n"
+        f"Arsenal: {player.buildings.get('arsenal', 0)} |"
+        f"Moinho: {player.buildings.get('moinho', 0)} |" 
+        f"Casa de construção: {player.buildings.get('casa de construção', 0)}\n"
+        f"🔬 Tecnologias Pesquisadas: {', '.join([c.TECHNOLOGIES[t]['label'] for t in player.searched_techs]) or 'Nenhuma'}\n"
     )
     return texto
 
 def INFO_MSG():
-    return (
-        "📖 **GUIA DO SOBERANO**\n\n"
-        "🏠 **Casas**: Liberam slots para novas construções.\n"
-        "🌱 **Fazendas**: Geram comida (🍎) para tropas e expansão.\n"
-        "🪚 **Serrarias**: Geram madeira (🪵) para obras e muros.\n"
-        "🛒 **Mercado**: Gera ouro (💰) para pesquisas científicas.\n"
-        "🔬 **Pesquisas**: Melhoram a eficiência de tudo no seu reino!\n\n"
-        "Dica: Teresópolis tem bônus de defesa em muralhas! 🏔️"
-    )
+    '''Gera a mensagem de informações gerais sobre o jogo, incluindo detalhes das civilizações, construções e tecnologias disponíveis.'''
+    texto = "📚 **SOBRE AS CONSTRUÇÕES**\n\n"
 
+    for b_id, info in c.BUILDINGS.items():
+        texto += f"*{info['label']}*\n"
+        texto += f"└ {info['description']}\n\n"
+
+    texto += "📖 **SOBRE AS TECNOLOGIAS**\n\n"
+
+    for t_id, info in c.TECHNOLOGIES.items():
+        texto += f"*{info['label']}*\n"
+        texto += f"└ {info['description']}\n\n"
+        texto += f"_Requisitos: {', '.join(c.TECHNOLOGIES[t_id].get('requisities', [])) or 'Nenhum'}_\n\n"
+        texto += f"_Construção raiz: {c.BUILDINGS[info['root_building']]['label']}}}_\n\n"
+
+    return texto
 NO_ACTIVE_GAME = "⚠️ Não há um jogo ativo. Use /start para iniciar uma nova partida."
 
 # --- RELATÓRIOS DE TURNO ---
 
 def TURN_REPORT_INTRODUCTION(turn):
+    '''Gera a introdução do relatório de turno, destacando o número do turno e preparando o jogador para os detalhes que virão a seguir, com um formato claro e visualmente atraente.'''
     return f"📅 **RELATÓRIO DO TURNO {turn}**\n\n"
 
 def ACTION_FEEDBACK(report):
+    '''Gera o feedback detalhado da ação do jogador, incluindo o resultado da construção, recrutamento ou ataque, com ícones e mensagens claras para cada tipo de ação e seu sucesso ou falha.'''
     p_act = report.get('player_action', {})
     if not p_act: return ""
     
@@ -137,7 +162,7 @@ def ACTION_FEEDBACK(report):
         if p_act.get('success'):
             feedback = "⚔️ **Recrutamento:** Novos soldados se juntaram às suas fileiras."
         else:
-            feedback = "🍎 **Fome!** Sem comida suficiente para treinar soldados."
+            feedback = "🍎 **Falha!** Impossível treinar soldados."
             
     elif p_act.get('type') == 'attack':
         if p_act.get('success'):
@@ -148,21 +173,31 @@ def ACTION_FEEDBACK(report):
     return feedback
 
 def AI_ACTION_FEEDBACK(report):
+    '''Gera o feedback detalhado da ação da IA, interpretando as ações tomadas pelo inimigo durante o turno e fornecendo ao jogador informações claras sobre o que a IA fez, como construções, recrutamentos ou ataques, para que ele possa entender melhor a situação do jogo.'''
     ai_act = report.get('ai_action', {})
     if not ai_act: return ""
     
     feedback = ""
-    if ai_act.get('type') == 'build' and ai_act.get('success'):
-        target = ai_act.get('target')
-        label = c.BUILDINGS.get(target, {}).get('label', target)
-        feedback = f"🏗️ **Inimigo construiu:** O oponente erigiu um *{label}*."
+    if ai_act.get('type') == 'build':
+        if ai_act.get('success'):
+            target = ai_act.get('target')
+            label = c.BUILDINGS.get(target, {}).get('label', target)
+            feedback = f"🏗️ **Inimigo construiu:** O oponente erigiu um *{label}*."
+        else:
+            feedback = "🚫 **Inimigo falhou na construção:** O inimigo tentou construir algo, mas não conseguiu."
+
+    elif ai_act.get('type') == 'army':
+        if ai_act.get('success'):
+            feedback = "⚔️ **Inimigo recrutou:** O inimigo reforçou suas tropas!"
+        else:
+            feedback = "🍎 **Inimigo falhou no recrutamento:** Parece que o inimigo teve dificuldades para recrutar soldados."
         
-    elif ai_act.get('type') == 'army' and ai_act.get('success'):
-        feedback = "⚔️ **Inimigo recrutou:** O inimigo reforçou suas tropas!"
-        
-    elif ai_act.get('type') == 'attack' and ai_act.get('success'):
-        feedback = "⚠️ **Inimigo atacou!** Prepare-se para a batalha!"
-    
+    elif ai_act.get('type') == 'attack':
+        if ai_act.get('success'):
+            feedback = "⚠️ **Inimigo atacou!** Prepare-se para a batalha!"
+        else:
+            feedback = "🚫 **Inimigo falhou no ataque:** O inimigo tentou atacar, mas não conseguiu."
+
     return feedback
 
 def FIGHT_FEEDBACK(report):
