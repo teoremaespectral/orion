@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.3.1] - 2026-04-24
+### Changed
+- New logic for interface: Now menus and action dispatcher have their own classes unpacked from the View
+- Information about buildings has been moved for info
+- Status now show complete information about the kingdom
+- Minor text changes for better readibility of the game
+
+### Fixed
+- The enemy failed actions now are shown
+
 ## [1.3.0] - "Science and Fiction" - 2026-04-23
 ### Added
 - Gold as a new resource
