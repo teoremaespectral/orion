@@ -133,7 +133,7 @@ def INFO_MSG():
         texto += f"*{info['label']}*\n"
         texto += f"└ {info['description']}\n\n"
         texto += f"_Requisitos: {', '.join(c.TECHNOLOGIES[t_id].get('requisities', [])) or 'Nenhum'}_\n\n"
-        texto += f"_Construção raiz: {c.BUILDINGS[info['root_building']]['label']}}}_\n\n"
+        texto += f"_Construção raiz: {c.BUILDINGS[info['root_building']]['label']}_\n\n"
 
     return texto
 NO_ACTIVE_GAME = "⚠️ Não há um jogo ativo. Use /start para iniciar uma nova partida."
@@ -170,6 +170,14 @@ def ACTION_FEEDBACK(report):
         else:
             feedback = "🚫 **Cancelado:** Você não tem soldados para atacar."
 
+    elif p_act.get('type') == 'research':
+        target = p_act.get('target')
+        label = c.TECHNOLOGIES.get(target, {}).get('label', target)
+        if p_act.get('success'):
+            feedback = f"🧪 **Descoberta!** Você pesquisou *{label}*."
+        else:
+            feedback = f"❌ **Falha!** Ouro insuficiente ou requisitos não atendidos para *{label}*."
+
     return feedback
 
 def AI_ACTION_FEEDBACK(report):
@@ -197,6 +205,14 @@ def AI_ACTION_FEEDBACK(report):
             feedback = "⚠️ **Inimigo atacou!** Prepare-se para a batalha!"
         else:
             feedback = "🚫 **Inimigo falhou no ataque:** O inimigo tentou atacar, mas não conseguiu."
+
+    elif ai_act.get('type') == 'research':
+        if ai_act.get('success'):
+            target = ai_act.get('target')
+            label = c.TECHNOLOGIES.get(target, {}).get('label', target)
+            feedback = f"🔬 **Inimigo pesquisou:** O oponente descobriu *{label}*."
+        else:
+            feedback = "🚫 **Inimigo falhou na pesquisa:** O inimigo tentou pesquisar algo, mas não conseguiu."
 
     return feedback
 
