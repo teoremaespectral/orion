@@ -253,7 +253,7 @@ class MenuManager:
     def _get_main_keyboard(self):
         return ReplyKeyboardMarkup(keyboard=[
             [KeyboardButton(text="🏗️ Construções"), KeyboardButton(text="🔬 Pesquisar")],
-            [KeyboardButton(text="⚔️ Exército"), KeyboardButton(text="🚩 ATACAR")],
+            [KeyboardButton(text=f"{txt.ACTION_TRIGGER['army']} Exército"), KeyboardButton(text=f"{txt.ACTION_TRIGGER['attack']} ATACAR")],
             [KeyboardButton(text="📊 Status"), KeyboardButton(text="ℹ️ Info")]
         ], resize_keyboard=True)
     

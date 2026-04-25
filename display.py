@@ -20,7 +20,7 @@ def BUILD_BUTTON(player):
     button = []
     for building_name, info in c.BUILDINGS.items():
 
-        icon = "🔨" if player.can_build(building_name) else "🚫"
+        icon = ACTION_TRIGGER['build'] if player.can_build(building_name) else "🚫"
         text = f"{icon} {info['label']} (🍎{info['food_cost']} 🪵{info['wood_cost']})"
         button.append(text)
     return button
@@ -35,7 +35,7 @@ def RESEARCH_BUTTONS(player):
             has_reqs = all(r in player.searched_techs for r in info.get('requisities', []))
             
             if has_root and has_reqs:
-                icon = "🧪" if player.resources.get('gold', 0) >= info['gold_cost'] else "🚫"
+                icon = ACTION_TRIGGER['research'] if player.resources.get('gold', 0) >= info['gold_cost'] else "🚫"
                 buttons.append(f"{icon} {info['label']}")
     
     buttons.append("⬅️ Voltar")
