@@ -65,7 +65,7 @@ def handle_setup_flow(m: M):
             del user_setup[m.user_id]
             
             # Mensagem de início de guerra
-            texto = txt.WAR_START(setup_data["player_civ"], setup_data["ai_civ"], m.text)
+            texto = txt.WAR_START(setup_data["player_civ"], setup_data["ai_civ"])
             send_message(m.chat_id, texto, reply_markup=menu._get_main_keyboard())
 
 # --- ACTIONS ---

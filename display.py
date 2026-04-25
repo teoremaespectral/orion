@@ -41,7 +41,7 @@ def RESEARCH_BUTTONS(player):
     buttons.append("⬅️ Voltar")
     return buttons
 
-def WAR_START(p_civ, a_civ, strategy):
+def WAR_START(p_civ, a_civ):
     '''Gera a mensagem de início de guerra com detalhes da configuração escolhida'''
     texto = (
         "🚩 **GUERRA DECLARADA!**\n\n"
