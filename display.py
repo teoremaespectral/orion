@@ -114,7 +114,7 @@ def STATUS_MSG(player, turn):
         f"\n────────────────────\n"
         f"Arsenal: {player.buildings.get('arsenal', 0)} |"
         f"Moinho: {player.buildings.get('moinho', 0)} |" 
-        f"Casa de construção: {player.buildings.get('casa de construção', 0)}\n"
+        f"Casa de construção: {player.buildings.get('casa de construção', 0)} |\n"
         f"🔬 Tecnologias Pesquisadas: {', '.join([c.TECHNOLOGIES[t]['label'] for t in player.searched_techs]) or 'Nenhuma'}\n"
     )
     return texto
@@ -131,9 +131,9 @@ def INFO_MSG():
 
     for t_id, info in c.TECHNOLOGIES.items():
         texto += f"*{info['label']}*\n"
-        texto += f"└ {info['description']}\n\n"
-        texto += f"_Requisitos: {', '.join(c.TECHNOLOGIES[t_id].get('requisities', [])) or 'Nenhum'}_\n\n"
-        texto += f"_Construção raiz: {c.BUILDINGS[info['root_building']]['label']}_\n\n"
+        texto += f"└ {info['description']}\n"
+        texto += f"_Requisitos: {', '.join(c.TECHNOLOGIES[t_id].get('requisities', [])) or 'Nenhum'}_\n"
+        texto += f"_Construção raiz: {c.BUILDINGS[info['root_building']]['label']}_\n"
 
     return texto
 NO_ACTIVE_GAME = "⚠️ Não há um jogo ativo. Use /start para iniciar uma nova partida."
