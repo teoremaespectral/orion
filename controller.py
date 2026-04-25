@@ -186,16 +186,17 @@ class ActionDispatcher:
         self.game = game
 
         self.trigger_map = {
-            c.ACTION_TRIGGER['army']: self._handle_army,
-            c.ACTION_TRIGGER['attack']: self._handle_attack,
-            c.ACTION_TRIGGER['build']: self._handle_build,
-            c.ACTION_TRIGGER['research']: self._handle_research
+            txt.ACTION_TRIGGER['army']: self._handle_army,
+            txt.ACTION_TRIGGER['attack']: self._handle_attack,
+            txt.ACTION_TRIGGER['build']: self._handle_build,
+            txt.ACTION_TRIGGER['research']: self._handle_research
         }
 
     def resolve(self):
         '''Percorre o mapa de triggers para identificar qual ação corresponde à mensagem do jogador. Se a mensagem começar com um dos triggers definidos, o método associado será chamado para processar a ação. Retorna um dicionário com o tipo e alvo da ação, ou None se nenhum trigger for identificado.'''
         for trigger, handler in self.trigger_map.items():
             if self.m.text.startswith(trigger):
+                print(f"Passo 5: Ação identificada - {handler.__name__}")
                 return handler()
         return None
     
@@ -208,7 +209,7 @@ class ActionDispatcher:
         return {"type": "attack", "target": "invasion"}
     
     def _handle_build(self):
-        ''''Processa a ação de construção, extraindo o nome do edifício da mensagem do jogador e comparando com os rótulos dos edifícios definidos nas constantes. Retorna um dicionário indicando que o tipo da ação é "build" e o alvo é o ID do edifício correspondente. Se nenhum edifício for identificado, retorna None.'''
+        '''Processa a ação de construção, extraindo o nome do edifício da mensagem do jogador e comparando com os rótulos dos edifícios definidos nas constantes. Retorna um dicionário indicando que o tipo da ação é "build" e o alvo é o ID do edifício correspondente. Se nenhum edifício for identificado, retorna None.'''
         clean_text = self.m.text.replace(c.ACTION_TRIGGER['build'], "").split('(')[0].strip()
         
         for b_id, info in c.BUILDINGS.items():
