@@ -87,24 +87,28 @@ def turtle_strategy(count):
         1: 'first_moves',
         2: 'early_wood',
         3: 'build_walls',
-        4: 'build_walls',
-        5: 'early_food',
-        6: 'barrack_and_train',
-        7: 'attack',
-        8: 'early_gold',
-        9: 'early_wood',
-        10: 'build_walls',
-        11: 'casa de construção',
-        12: 'research walls'
+        4: 'early_food',
+        5: 'build_a_house',
+        6: 'build_a_barrack',
+        7: 'train_soldiers',
+        8: 'attack',
+        9: 'build_a_market',
+        10: 'build_a_market',
+        11: 'build_walls',
+        12: 'casa de construção',
+        13: 'research walls',
+        14: 'build_a_house',
+        15: 'build_a_farm',
+        16: 'build_a_barrack',
     }
 
     if count in build_order.keys():
         return get_tactic(build_order[count])
 
     late_game_cycle = {
-        0: 'build_walls',
-        1: 'barrack_and_train',
-        2: 'attack'
+        0: 'attack',
+        1: 'train_soldiers',
+        2: 'train_soldiers',
     }
     
     return get_tactic(late_game_cycle[count % 3])
@@ -116,11 +120,12 @@ def rusher_strategy(count):
         1: 'first_moves',
         2: 'early_food',
         3: 'early_wood',
-        4: 'build_a_barrack',
-        5: 'train_soldiers',
-        6: 'attack',
-        7: 'build_a_farm',
-        8: 'build_a_barrack',
+        4: 'build_a_house',
+        5: 'build_a_barrack',
+        6: 'train_soldiers',
+        7: 'attack',
+        8: 'build_a_farm',
+        9: 'build_a_barrack',
     }
 
     if count in build_order.keys():
