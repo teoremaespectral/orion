@@ -161,8 +161,9 @@ def greedy_strategy(count):
         return get_tactic(build_order[count])
 
     late_game_cycle = {
-        0: 'train_soldiers',
-        1: 'attack',
+        0: 'attack',
+        1: 'train_soldiers',
+        2: 'train_soldiers',
     }
     
-    return get_tactic(late_game_cycle[count % 2])
+    return get_tactic(late_game_cycle[count % 3])

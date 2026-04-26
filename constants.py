@@ -8,9 +8,9 @@ CIVS = {
     },
     "Petrópolis": {
         "label": "Petrópolis 🏰",
-        "bonus": "Tropas Reais: Soldados são 20% mais baratos.",
+        "bonus": "Tropas Reais: Soldados são 30% mais baratos.",
         "mods": {
-            "army_cost": 0.8,
+            "army_cost": 0.7,
         }
     },
     "Volta Redonda": {
@@ -180,20 +180,20 @@ TECHNOLOGIES = {
     },
     "aço leve": {
         "label": "⚔️ Aço Leve",
-        "description": "Unidades se tornam 20% mais baratas de treinar",
+        "description": "Reduz os custos de treinamento de soldados em 50%",
         "gold_cost": 20,
         "mods": {
-            "army_cost": 0.8,
+            "army_cost": 0.5,
         },
         "requisities": [],
         "root_building": 'arsenal',
     },
     "legião de combate": {
         "label": "⚔️ Legião de Combate",
-        "description": "Unidades se tornam 30% mais baratas de treinar",
+        "description": "Reduz os custos de treinamento de soldados em 50%",
         "gold_cost": 20,
         "mods": {
-            "army_cost": 0.7,
+            "army_cost": 0.5,
         },
         "requisities": ["aço leve"],
         "root_building": 'arsenal',
