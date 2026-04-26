@@ -145,10 +145,16 @@ def greedy_strategy(count):
         1: 'first_moves',
         2: 'early_food',
         3: 'early_wood',
-        4: 'early_gold',
-        5: 'build_walls',
-        6: 'arsenal',
-        7: 'research_army',
+        4: 'build_a_house',
+        5: 'build_a_market',
+        6: 'build_walls',
+        7: 'arsenal',
+        8: 'research_army',
+        9: 'build_a_farm',
+        10: 'build_a_barrack',
+        11: 'train_soldiers',
+        12: 'build_a_house',
+        13: 'build_a_barrack',
     }
 
     if count in build_order.keys():
@@ -157,8 +163,6 @@ def greedy_strategy(count):
     late_game_cycle = {
         0: 'train_soldiers',
         1: 'attack',
-        2: 'barrack_and_train',
-        3: 'barrack_and_train'
     }
     
-    return get_tactic(late_game_cycle[count % 4])
+    return get_tactic(late_game_cycle[count % 2])
