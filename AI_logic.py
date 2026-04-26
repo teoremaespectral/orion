@@ -80,7 +80,7 @@ def dumb_strategy(count):
     elif count == 3:
         return get_tactic('early_wood')
     else:
-        return get_tactic(choice(TACTICS.keys()))
+        return get_tactic(choice(list(TACTICS.keys())))
     
 def turtle_strategy(count):
     ''' Estratégia defensiva que prioriza a construção de muros e o fortalecimento das defesas. '''
