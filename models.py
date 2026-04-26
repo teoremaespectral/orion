@@ -104,15 +104,38 @@ class Kingdom:
         return False
 
     def train_army(self):
-        '''Tenta treinar soldados, verificando o custo total com base na capacidade dos quartéis e aplicando modificadores civis. Retorna True se o treinamento for bem-sucedido, ou False caso contrário.'''
-        # Quantidade máxima que os quarteis aguentam
-        capacidade = int(c.TRAIN_CAP_PER_QUARTEL * self.buildings['quartel'])
-        custo_total = capacidade * self.ARMY_COST
+        '''
+        Treina soldados convertendo comida disponível em exército.
+        O limite de treino é definido pelo número de quartéis.
+        O modificador army_cost agora aumenta a produção de soldados por unidade de comida.
+        '''
+        # 1. Definir o teto de capacidade (Quantas vezes posso rodar o ciclo de treino)
+        # No Orion, o limite é baseado na quantidade de quartéis
+        limite_treino = int(c.TRAIN_CAP_PER_QUARTEL * self.buildings['quartel'])
     
-        if capacidade > 0 and self.resources["food"] >= custo_total:
-            self.army += capacidade
-            self.resources["food"] -= custo_total
+        if limite_treino <= 0:
+            return False
+
+        # 2. Calcular o rendimento (Soldados por ciclo de comida)
+        # Se o army_cost diminui (ex: 0.8), dividimos por ele para aumentar o rendimento
+        # Ex: 1 unidade de comida / 0.8 cost = 1.25 soldados
+        soldados_por_unidade = 1 / self.MODIFIER('army_cost')
+
+        # 3. Verificar quanto o jogador PODE e QUER treinar
+        # O custo fixo de ativação por ciclo continua sendo c.ARMY_COST (valor base da constante)
+        custo_total_maximo = limite_treino * c.ARMY_COST
+    
+        # Se ele tem menos comida que o máximo, ele treina o que o bolso permitir
+        custo_efetivo = min(self.resources["food"], custo_total_maximo)
+    
+        # 4. Executar a conversão
+        if custo_efetivo >= c.ARMY_COST: # Pelo menos um ciclo de treino
+            unidades_treinadas = int((custo_efetivo / c.ARMY_COST) * soldados_por_unidade)
+        
+            self.army += unidades_treinadas
+            self.resources["food"] -= int(custo_efetivo)
             return True
+        
         return False
 
     def research(self, tech_id):
