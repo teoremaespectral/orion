@@ -75,6 +75,8 @@ def dumb_strategy(count):
         return get_tactic('early_food')
     elif count == 3:
         return get_tactic('early_wood')
+    elif count == 4:
+        return get_tactic('build_a_house')
     else:
         return get_tactic(choice(list(TACTICS.keys())))
     
