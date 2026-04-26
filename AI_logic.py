@@ -116,22 +116,22 @@ def rusher_strategy(count):
         1: 'first_moves',
         2: 'early_food',
         3: 'early_wood',
-        4: 'barrack_and_train',
-        5: 'barrack_and_train',
-        6: 'train_soldiers',
-        7: 'attack',
+        4: 'build_a_barrack',
+        5: 'train_soldiers',
+        6: 'attack',
+        7: 'build_a_farm',
+        8: 'build_a_barrack',
     }
 
     if count in build_order.keys():
         return get_tactic(build_order[count])
 
     late_game_cycle = {
-        0: 'barrack_and_train',
+        0: 'train_soldiers',
         1: 'attack',
-        2: 'barrack_and_train',
     }
     
-    return get_tactic(late_game_cycle[count % 3])
+    return get_tactic(late_game_cycle[count % 2])
 
 def greedy_strategy(count):
     ''' Estratégia que prioriza a construção de edifícios que aumentam a produção de recursos, como fazendas e serrarias. '''
