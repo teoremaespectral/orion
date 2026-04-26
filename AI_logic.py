@@ -31,35 +31,31 @@ def out_of_army(ai):
 
 TACTICS = {
     'first_moves': [
-        [('build', 'fazenda'), ('build', 'serraria'), ('build', 'casa')],
-        [('build', 'serraria'), ('build', 'fazenda'), ('build', 'casa')],
+        [('build', 'fazenda'), ('build', 'serraria')],
+        [('build', 'serraria'), ('build', 'fazenda')],
     ],
-    'early_food': [[('build', 'fazenda'), ('build', 'fazenda'), ('build', 'fazenda'), ('build', 'casa')]],
-    'early_wood': [[('build', 'serraria'), ('build', 'serraria'), ('build', 'serraria'), ('build', 'casa')]],
+    'early_food': [[('build', 'casa'), ('build', 'fazenda'), ('build', 'fazenda'), ('build', 'fazenda')]],
+    'early_wood': [[('build', 'casa'), ('build', 'serraria'), ('build', 'serraria'), ('build', 'serraria')]],
     'build_walls': [
-        [('build', 'muro'), ('build', 'muro')],
-        [('build', 'muro'), ('build', 'casa'), ('build', 'muro')],
-    ],
-    'train_soldiers': [
-        [('army', 'train_some_soldiers')],
-        [('army', 'train_some_soldiers'), ('army', 'train_some_soldiers')],
-    ],
-    'barrack_and_train': [
-        [('build', 'quartel'), ('army', 'train_soldiers'), ('army', 'train_soldiers')],
-        [('build', 'quartel'), ('army', 'train_soldiers'), ('army', 'train_soldiers'), ('army', 'train_soldiers')],
+        [('build', 'muro'), ('build', 'muro'), ('build', 'muro')],
+        [('build', 'muro'), ('build', 'muro'), ('build', 'muro'), ('build', 'muro')],
     ],
     'build_a_house': [[('build', 'casa')]],
     'build_a_farm': [[('build', 'fazenda')]],
     'build_a_sawmill': [[('build', 'serraria')]],
-    'make_a_market': [[('build', 'mercado')]],
+    'build_a_market': [[('build', 'mercado')]],
+    'build_a_barrack': [[('build', 'quartel')]],
+    'train_soldiers': [
+        [('army', 'soldiers'), ('army', 'soldiers'), ('army', 'soldiers'), ('army', 'soldiers'), ('army', 'soldiers')],
+        [('army', 'soldiers'), ('army', 'soldiers'), ('army', 'soldiers'), ('army', 'soldiers'), ('army', 'soldiers'), ('army', 'soldiers')],
+    ],
     'attack': [
         [('attack', 'attack')],
         [('attack', 'attack'), ('attack', 'attack')],
     ],
-    'early_gold': [[('build', 'mercado'), ('build', 'serraria'), ('build', 'serraria'), ('build', 'casa')]],
-    'casa de construção': [[('build', 'casa de construção'), ('build', 'casa')]],
-    'moinho de vento': [[('build', 'moinho'), ('build', 'casa')]],
-    'arsenal': [[('build', 'arsenal'), ('build', 'casa')]],
+    'casa de construção': [[('build', 'casa'),('build', 'casa de construção')]],
+    'moinho de vento': [[('build', 'casa'), ('build', 'moinho')]],
+    'arsenal': [[('build', 'casa'), ('build', 'arsenal')]],
     'research walls': [[('research', 'muralhas reforçadas')]],
     'research_army': [[('research', 'aço leve'), ('research', 'legião de combate')]],
 }
