@@ -66,6 +66,8 @@ class Game:
             strategy = choice(["dumb", "rusher", "turtle", "greedy"])
     
         self.ai_brain.personality = strategy
+        self.turn_count = 1 
+        self.status = "active"
         self.save()
 
     def play_turn(self, action):
