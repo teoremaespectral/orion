@@ -134,6 +134,7 @@ class Game:
 
         ai_action = self.ai_brain.get_next_action(self.ai_kingdom).copy()
         a_type, a_target = ai_action['type'], ai_action['target']
+        ai_action['success'] = False
 
         # 3. Tenta executar
         if a_type == "build":
