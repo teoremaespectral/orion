@@ -30,8 +30,8 @@ CIVS = {
 }
 
 INITIAL_LIFE = 200
-INITIAL_FOOD = 60
-INITIAL_WOOD = 30
+INITIAL_FOOD = 50
+INITIAL_WOOD = 25
 INITIAL_GOLD = 0
 INITIAL_ARMY = 0
 INITIAL_BUILDINGS = {
@@ -43,16 +43,16 @@ INITIAL_BUILDINGS = {
     'mercado': 0,
     'moinho': 0,
     'arsenal': 0,
-    'casa de construção': 0
+    'casa de construção': 0,
 }
 INITIAL_SLOTS = 0
 
 DEFENSE_PER_WALL = 5
-TRAIN_CAP_PER_QUARTEL = 3
+TRAIN_CAP_PER_QUARTEL = 6
 SLOTS_PER_HOUSE = 3
 ARMY_COST = 2
 FOOD_PRODUCTION_PER_FARM = 2
-WOOD_PRODUCTION_PER_LUMBERMILL = 2
+WOOD_PRODUCTION_PER_LUMBERMILL = 3
 GOLD_PRODUCTION_PER_MARKET = 4
 
 FEW_WOOD = 25
@@ -99,7 +99,7 @@ BUILDINGS = {
     },
     "mercado": {
         "label": "🛒 Mercado",
-        "wood_cost": 20,
+        "wood_cost": 30,
         "food_cost": 0,
         "description": f"Faz o comércio girar. Produz +{GOLD_PRODUCTION_PER_MARKET} ouro a cada turno.",
         "effect_value": GOLD_PRODUCTION_PER_MARKET,
@@ -107,7 +107,7 @@ BUILDINGS = {
     },
     "muro": {
         "label": "🧱 Muro",
-        "wood_cost": 8,
+        "wood_cost": 12,
         "food_cost": 0,
         "description": f"Proteção física. Aumenta a defesa base em +{DEFENSE_PER_WALL}.",
         "effect_value": DEFENSE_PER_WALL,
@@ -115,7 +115,7 @@ BUILDINGS = {
     },
     "quartel": {
         "label": "⚔️ Quartel",
-        "wood_cost": 24,
+        "wood_cost": 30,
         "food_cost": 0,
         "description": f"Treinamento militar. Permite treinar até {TRAIN_CAP_PER_QUARTEL} soldados por turno.",
         "effect_value": TRAIN_CAP_PER_QUARTEL,
@@ -123,7 +123,7 @@ BUILDINGS = {
     },
     "casa de construção": {
         "label": "🏗️ Casa de Construção",
-        "wood_cost": 50,
+        "wood_cost": 60,
         "food_cost": 0,
         "description": f"Libera tecnologias de construção e engenharia.",
         "effect_value": None,
@@ -131,7 +131,7 @@ BUILDINGS = {
     },
     "moinho": {
         "label": "🌾 Moinho",
-        "wood_cost": 50,
+        "wood_cost": 60,
         "food_cost": 0,
         "description": f"Libera tecnologias para as fazendas.",
         "effect_value": None,
@@ -139,7 +139,7 @@ BUILDINGS = {
     },
     "arsenal": {
         "label": "🛡️ Arsenal",
-        "wood_cost": 50,
+        "wood_cost": 60,
         "food_cost": 0,
         "description": f"Libera tecnologias para benefício do exército.",
         "effect_value": None,
