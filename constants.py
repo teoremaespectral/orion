@@ -117,7 +117,7 @@ BUILDINGS = {
         "label": "⚔️ Quartel",
         "wood_cost": 30,
         "food_cost": 0,
-        "description": f"Treinamento militar. Permite treinar até {TRAIN_CAP_PER_QUARTEL} soldados por turno.",
+        "description": f"Treinamento militar. Permite treinar até {TRAIN_CAP_PER_QUARTEL} soldados por turno. Cada soldado custa {ARMY_COST} comida.",
         "effect_value": TRAIN_CAP_PER_QUARTEL,
         "slots": 1,
     },
