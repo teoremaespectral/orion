@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.3.2] - 2026-04-27
+### Changed
+- New build orders for all strategies
+- New logic for train_army that is more fexible with the available food
+- New constants for improved gameplay
+
+### Fixed
+- Fix a bug where turn number didn't reset on new game
+- Fix a bug where Dumb strategy couldn't sort a choice
+- Fix a bug where the AI couldn't make a failed attack
+
 ## [1.3.1] - 2026-04-24
 ### Changed
 - New logic for interface: Now menus and action dispatcher have their own classes unpacked from the View
