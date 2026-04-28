@@ -89,10 +89,10 @@ def turtle_strategy(count):
         3: 'build_walls',
         4: 'early_food',
         5: 'build_a_house',
-        6: 'build_a_barrack',
-        7: 'train_soldiers',
-        8: 'attack',
-        9: 'build_a_market',
+        6: 'build_a_sawmill',
+        7: 'build_a_barrack',
+        8: 'train_soldiers',
+        9: 'attack',
         10: 'build_a_market',
         11: 'build_walls',
         12: 'casa de construção',
@@ -147,23 +147,24 @@ def greedy_strategy(count):
         3: 'early_wood',
         4: 'build_a_house',
         5: 'build_a_market',
-        6: 'build_walls',
-        7: 'arsenal',
-        8: 'research_army',
-        9: 'build_a_farm',
-        10: 'build_a_barrack',
-        11: 'train_soldiers',
-        12: 'build_a_house',
+        6: 'build_a_sawmill',
+        7: 'build_a_sawmill',
+        8: 'build_walls',
+        9: 'arsenal',
+        10: 'research_army',
+        11: 'build_a_house',
+        12: 'build_a_farm',
         13: 'build_a_barrack',
+        14: 'build_a_barrack',
     }
 
     if count in build_order.keys():
         return get_tactic(build_order[count])
 
     late_game_cycle = {
-        0: 'attack',
+        0: 'train_soldiers',
         1: 'train_soldiers',
-        2: 'train_soldiers',
+        2: 'attack',
     }
     
     return get_tactic(late_game_cycle[count % 3])
