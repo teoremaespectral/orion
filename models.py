@@ -2,6 +2,51 @@ import constants as c
 from math import prod
 import AI_logic
 
+class Army:
+    def __init__(self, player_data=None):
+        self.player_data = player_data
+        self.army_data = player_data.get('army', None)
+        if player_data:
+            self.load()
+        else:
+            self.create_army()
+
+    def create_army(self):
+        self.composition = {}
+        self.formation = 'phalanx'
+
+    def load(self):
+        self.composition = self.army_data.get('composition', {})
+        self.formation = self.army_data.get('formation', 'phalanx')
+
+    def to_dict(self):
+        return {
+            'composition': self.composition,
+            'formation': self.formation,
+        }
+    
+    def calculate_power(self, type):
+        power = 0
+        for unit, count in self.composition.items():
+            unit_data = c.ARMY_UNITS.get(unit, {})
+            if unit_data.get('type') == type:
+                power += unit_data.get('power', 0) * count
+
+        return power
+    
+    @property
+    def front_power(self):
+        return self.calculate_power('front')
+
+    @property
+    def fire_power(self):
+        return self.calculate_power('fire')
+
+    @property
+    def mobile_power(self):
+        return self.calculate_power('mobile')
+
+
 class Kingdom:
     '''Representa o estado de um reino, incluindo recursos, construções, exército e vida.'''
     def __init__(self, user_id, user_name, data=None):
