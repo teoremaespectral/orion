@@ -3,7 +3,9 @@ from math import prod
 import AI_logic
 
 class Army:
+    '''Representa o exército de um reino, incluindo sua composição, formação e poder de combate. O exército é influenciado por tecnologias pesquisadas e pela formação escolhida, que podem modificar seu poder de ataque em diferentes tipos de combate (frontal, à distância, móvel).'''
     def __init__(self, player_data=None):
+        '''Inicializa o exército com dados pré-existentes ou valores padrão para um novo exército. Se player_data for fornecido, ele é usado para configurar a composição e formação do exército; caso contrário, a composição é iniciada como vazia e a formação é definida como 'phalanx'.'''
         self.player_data = player_data
         self.army_data = player_data.get('army', None)
         if player_data:
@@ -12,10 +14,12 @@ class Army:
             self.create_army()
 
     def create_army(self):
+        '''Configura um novo exército com uma composição vazia e uma formação padrão. Este método é chamado quando não há dados pré-existentes para o exército, garantindo que ele seja criado com uma configuração limpa e consistente. A composição é representada como um dicionário que pode ser preenchido posteriormente com unidades específicas, e a formação é definida como 'phalanx', que é a formação inicial padrão para os exércitos.'''
         self.composition = {}
         self.formation = 'phalanx'
 
     def load(self):
+        '''Carrega a composição e formação do exército a partir dos dados fornecidos. Este método é chamado quando há dados pré-existentes para o exército, permitindo que ele seja configurado de acordo com o estado salvo. A composição é extraída do dicionário 'army_data' usando a chave 'composition', e a formação é extraída usando a chave 'formation', com um valor padrão de 'phalanx' caso a chave não esteja presente. Isso garante que o exército seja configurado corretamente mesmo se alguns dados estiverem faltando.'''
         self.composition = self.army_data.get('composition', {})
         self.formation = self.army_data.get('formation', 'phalanx')
 
@@ -26,6 +30,7 @@ class Army:
         }
     
     def calculate_power(self, type):
+        '''Calcula o poder de combate do exército para um tipo específico (frontal, à distância, móvel) com base na composição das unidades e nos modificadores aplicáveis. O cálculo do poder leva em consideração as unidades presentes na composição do exército, multiplicando a quantidade de cada unidade pelo seu poder individual, que é definido nas constantes. O resultado é um valor total de poder para o tipo de combate especificado, que pode ser modificado posteriormente por tecnologias e formações para refletir o poder efetivo do exército em combate.'''
         power = 0
         for unit, count in self.composition.items():
             unit_data = c.ARMY_UNITS.get(unit, {})
@@ -33,18 +38,35 @@ class Army:
                 power += unit_data.get('power', 0) * count
 
         return power
+
+    def power_modifier(self, type):
+        '''Calcula o modificador de poder para um tipo específico de combate com base nas tecnologias pesquisadas e na formação do exército. O modificador é calculado multiplicando os efeitos de todas as tecnologias relevantes que afetam o tipo de combate especificado, bem como os efeitos da formação atual do exército. Isso permite que o poder de combate seja ajustado dinamicamente com base nas escolhas estratégicas do jogador em termos de tecnologias e formações, refletindo as vantagens ou desvantagens que essas escolhas conferem ao exército em diferentes tipos de confrontos. O resultado é um valor multiplicativo que pode ser aplicado ao poder base calculado para obter o poder efetivo do exército em combate.'''
+        mod = 1.0
+        #Modificadores de tecnologias
+        for tech in self.player_data.searched_techs:
+            if c.TECHNOLOGIES[tech]['effect'] == f"{type}_power":
+                mod *= c.TECHNOLOGIES[tech].get('effect_value', 1.0)
+        #Modificador de formação
+        for effect, effect_value in c.FORMATIONS.get(self.formation, {}).get('mods', {}).items():
+            if effect == f"{type}_power":
+                 mod *= effect_value
+
+        return mod
     
     @property
     def front_power(self):
-        return self.calculate_power('front')
+        '''Calcula o poder de combate frontal do exército, aplicando os modificadores relevantes. O poder frontal é determinado pela composição das unidades que são classificadas como de combate frontal, multiplicado pelos modificadores de tecnologias e formação que afetam o combate frontal. Este valor representa a eficácia do exército em confrontos diretos e é um componente crucial para determinar o resultado de batalhas que envolvem combates corpo a corpo. O resultado é um valor numérico que pode ser comparado com o poder de outros exércitos para avaliar a força relativa em combates frontais.'''
+        return self.calculate_power('front')*self.power_modifier('front')
 
     @property
     def fire_power(self):
-        return self.calculate_power('fire')
+        '''Calcula o poder de combate à distância do exército, aplicando os modificadores relevantes. O poder à distância é determinado pela composição das unidades que são classificadas como de combate à distância, multiplicado pelos modificadores de tecnologias e formação que afetam o combate à distância. Este valor representa a eficácia do exército em confrontos a longo alcance e é um componente crucial para determinar o resultado de batalhas que envolvem ataques à distância. O resultado é um valor numérico que pode ser comparado com o poder de outros exércitos para avaliar a força relativa em combates à distância.'''
+        return self.calculate_power('fire')*self.power_modifier('fire')
 
     @property
     def mobile_power(self):
-        return self.calculate_power('mobile')
+        '''Calcula o poder de combate móvel do exército, aplicando os modificadores relevantes. O poder móvel é determinado pela composição das unidades que são classificadas como de combate móvel, multiplicado pelos modificadores de tecnologias e formação que afetam o combate móvel. Este valor representa a eficácia do exército em confrontos que envolvem manobras rápidas e mobilidade, e é um componente crucial para determinar o resultado de batalhas que dependem da velocidade e agilidade das tropas. O resultado é um valor numérico que pode ser comparado com o poder de outros exércitos para avaliar a força relativa em combates móveis.'''
+        return self.calculate_power('mobile')*self.power_modifier('mobile')
 
 
 class Kingdom:
