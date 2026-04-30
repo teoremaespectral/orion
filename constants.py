@@ -229,6 +229,38 @@ FORMATIONS = {
     }
 }
 
+ARMY_UNITS = {
+    "warrior": {
+        "label": "Guerreiro",
+        "description": "Unidade básica de combate corpo a corpo, com força equilibrada e custo baixo.",
+        "food_cost": 2,
+        "wood_cost": 0,
+        "gold_cost": 0,
+        "power": 5,
+        "type": "front",
+    },
+
+    "archer": {
+        "label": "Arqueiro",
+        "description": "Unidade de combate à distância, com poder de fogo elevado, mas fraca em combate corpo a corpo.",
+        "food_cost": 5,
+        "wood_cost": 0,
+        "gold_cost": 0,
+        "power": 5,
+        "type": "fire",
+    },
+
+    "cavalry": {
+        "label": "Cavalaria",
+        "description": "Unidade de combate móvel, com alta mobilidade e poder de ataque, mas fraca em defesa.",
+        "food_cost": 10,
+        "wood_cost": 0,
+        "gold_cost": 0,
+        "power": 5,
+        "type": "mobile",
+    },
+}
+
 OPEN_BASELOSS = 0.7
 OPEN_RESIDUALLOSS = 0.2
 OPEN_CRITICALRATIO = 2
