@@ -55,22 +55,6 @@ FOOD_PRODUCTION_PER_FARM = 2
 WOOD_PRODUCTION_PER_LUMBERMILL = 3
 GOLD_PRODUCTION_PER_MARKET = 5
 
-FEW_WOOD = 25
-MUCH_WOOD = 40
-LOTS_OF_WOOD = 80
-FEW_FOOD = 40
-MUCH_FOOD = 70
-LOTS_OF_FOOD = 100
-FEW_SLOTS = 3
-MUCH_SLOTS = 10
-FEW_BARRACKS = 2
-MUCH_BARRACKS = 5
-FEW_ARMY = 35
-MUCH_ARMY = 60
-LOTS_OF_ARMY = 100
-
-TOO_LITTLE = 0.5
-TOO_MUCH = 0.8
 
 BUILDINGS = {
     "casa": {
@@ -197,6 +181,51 @@ TECHNOLOGIES = {
         },
         "requisities": ["aço leve"],
         "root_building": 'arsenal',
+    }
+}
+
+FORMATIONS = {
+    "phalanx": {
+        "label": "Falanque (Defensiva)",
+        "description": "Formação defensiva, ideal para proteger muralhas e resistir a ataques frontais",
+        "mods": {
+            'fire_power': 1.3,
+            'front_power': 1.3,
+            'mobile_power': 0.7,
+        },
+    },
+    "wedge": {
+        "label": "Cuneiforme (Ofensiva)",
+        "description": "Formação ofensiva, ideal para atacar inimigos em grupo",
+        "mods": {
+            'fire_power': 0.5,
+            'front_power': 1.6,
+        },
+    },
+    "skirmish": {
+        "label": "Guerrilha (Móvel)",
+        "description": "Formação dispersa, focada em mobilidade, ideal para manobras",
+        "mods": {
+            'front_power': 0.5,
+            'mobile_power': 1.6,
+        },
+    },
+    "square": {
+        "label": "Quadrado (Protetora)",
+        "description": "Formação de proteção total das unidades frágeis, ideal para evitar flancos e permitir foco máximo de fogo",
+        "mods": {
+            'fire_power': 1.6,
+            'mobile_power': 0.5,
+        },
+    },
+    "pincer": {
+        "label": "Pinça (Tática)",
+        "description": "Formação de ataque tático, ideal para flanquear o inimigo e derrotar suas unidades frágeis",
+        "mods": {
+            'front_power': 1.3,
+            'fire_power': 0.7,
+            'mobile_power': 1.3,
+        },
     }
 }
 
