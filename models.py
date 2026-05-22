@@ -2,6 +2,19 @@ import constants as c
 from math import prod
 import AI_logic
 
+class Unit:
+    '''Representa uma unidade militar, com um tipo específico e quantidade. As unidades têm atributos como poder de ataque, defesa, custo e multiplicadores de dano, que são definidos com base em suas categorias e na configuração geral do jogo. Esta classe é usada para modelar os diferentes tipos de soldados disponíveis no jogo, permitindo que o reino construa seu exército de acordo com suas necessidades estratégicas.'''
+    
+    def __init__(self, name, quantity):
+        self.name = name
+        self.quantity = quantity
+
+        self.categories = c.UNITS.get(name, {}).get('categories', [])
+        self.power = c.UNITS.get(name, {}).get('power', 0)
+        self.defense = c.UNITS.get(name, {}).get('defense', 0)
+        self.cost = c.UNITS.get(name, {}).get('cost', {})
+        self.dmg_multiplier = c.UNITS.get(name, {}).get('dmg_multiplier', {})
+
 class Kingdom:
     '''Representa o estado de um reino, incluindo recursos, construções, exército e vida.'''
     def __init__(self, user_id, user_name, data=None):
