@@ -15,6 +15,40 @@ class Unit:
         self.cost = c.UNITS.get(name, {}).get('cost', {})
         self.dmg_multiplier = c.UNITS.get(name, {}).get('dmg_multiplier', {})
 
+class Army:
+    '''Representa o exército de um reino, composto por diferentes unidades militares.'''
+
+    def __init__(self, data=None):
+        # Usar um dicionário facilita muito a busca pelo nome da unidade
+        if data and 'units' in data:
+            self.units = {u['name']: Unit(u['name'], u['quantity']) for u in data['units']}
+        else:
+            self.units = {}
+
+    def change(self, unit_name, quantity):
+        '''Adiciona ou subtrai unidades do exército. Se a quantidade for positiva, adiciona; se for negativa, subtrai. Retorna uma string indicando o resultado da operação: "added", "subtracted", "removed", "no_change" ou "ignored".'''
+        if quantity == 0:
+            return "no_change"
+
+        # Se a unidade já existe no exército
+        if unit_name in self.units:
+            unit = self.units[unit_name]
+            unit.quantity += quantity
+            
+            # Se a quantidade zerar ou ficar negativa, remove do exército
+            if unit.quantity <= 0:
+                del self.units[unit_name]
+                return "removed"
+                
+            return "added" if quantity > 0 else "subtracted"
+        
+        # Se a unidade NÃO existe, só adicionamos se a quantidade for positiva
+        elif quantity > 0:
+            self.units[unit_name] = Unit(unit_name, quantity)
+            return "added"
+        
+        return "ignored" # Tentou subtrair algo que não tinha
+
 class Kingdom:
     '''Representa o estado de um reino, incluindo recursos, construções, exército e vida.'''
     def __init__(self, user_id, user_name, data=None):
