@@ -9,7 +9,7 @@ class Unit:
         self.name = name
         self.quantity = quantity
 
-        self.categories = c.UNITS.get(name, {}).get('categories', [])
+        self.categories = c.UNITS.get(name, {}).get('categories', set())
         self.power = c.UNITS.get(name, {}).get('power', 0)
         self.defense = c.UNITS.get(name, {}).get('defense', 0)
         self.cost = c.UNITS.get(name, {}).get('cost', {})
@@ -48,6 +48,18 @@ class Army:
             return "added"
         
         return "ignored" # Tentou subtrair algo que não tinha
+    
+class Building:
+    '''Representa um edifício construído no reino, com um tipo específico e quantidade. Os edifícios têm atributos como custo de construção, slots ocupados, produção de recursos e defesa, que são definidos com base em suas categorias e na configuração geral do jogo. Esta classe é usada para modelar as diferentes construções disponíveis no jogo, permitindo que o reino desenvolva sua infraestrutura e fortaleça sua posição estratégica.'''
+    
+    def __init__(self, name, quantity):
+        self.name = name
+        self.quantity = quantity
+
+        self.slots = c.BUILDINGS.get(name, {}).get('slots', 0)
+        self.effects = c.BUILDINGS.get(name, {}).get('effects', {})
+        self.defense = c.BUILDINGS.get(name, {}).get('defense', 0)
+        self.cost = c.BUILDINGS.get(name, {}).get('cost', {})
 
 class Kingdom:
     '''Representa o estado de um reino, incluindo recursos, construções, exército e vida.'''
