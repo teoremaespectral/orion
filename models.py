@@ -61,6 +61,40 @@ class Building:
         self.defense = c.BUILDINGS.get(name, {}).get('defense', 0)
         self.cost = c.BUILDINGS.get(name, {}).get('cost', {})
 
+class Infrastructure:
+    '''Representa a infraestrutura de um reino, composta por diferentes edifícios.'''
+
+    def __init__(self, data=None):
+        # Usar um dicionário facilita muito a busca pelo nome do edifício
+        if data and 'buildings' in data:
+            self.buildings = {b['name']: Building(b['name'], b['quantity']) for b in data['buildings']}
+        else:
+            self.buildings = {}
+
+    def change(self, building_name, quantity):
+        '''Adiciona ou subtrai edifícios da infraestrutura. Se a quantidade for positiva, adiciona; se for negativa, subtrai. Retorna uma string indicando o resultado da operação: "added", "subtracted", "removed", "no_change" ou "ignored".'''
+        if quantity == 0:
+            return "no_change"
+
+        # Se o edifício já existe na infraestrutura
+        if building_name in self.buildings:
+            building = self.buildings[building_name]
+            building.quantity += quantity
+            
+            # Se a quantidade zerar ou ficar negativa, remove da infraestrutura
+            if building.quantity <= 0:
+                del self.buildings[building_name]
+                return "removed"
+                
+            return "added" if quantity > 0 else "subtracted"
+        
+        # Se o edifício NÃO existe, só adicionamos se a quantidade for positiva
+        elif quantity > 0:
+            self.buildings[building_name] = Building(building_name, quantity)
+            return "added"
+        
+        return "ignored" # Tentou subtrair algo que não tinha
+
 class Kingdom:
     '''Representa o estado de um reino, incluindo recursos, construções, exército e vida.'''
     def __init__(self, user_id, user_name, data=None):
