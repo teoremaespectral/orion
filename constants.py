@@ -1,3 +1,147 @@
+from dataclasses import dataclass, field
+from typing import Dict, List, Set, Optional
+
+@dataclass(frozen=True)
+class BuildingBlueprint:
+    label: str
+    icon: str
+    food_cost: int = 0
+    wood_cost: int = 0
+    gold_cost: int = 0
+    slots: int = 0
+
+    house_component: Optional[BuildingHouseComponent] = None
+    barrack_component: Optional[BuildingBarrackComponent] = None
+    research_component: Optional[BuildingResearchComponent] = None
+    production_component: Optional[BuildingProductionComponent] = None
+    defense_component: Optional[BuildingDefenseComponent] = None
+
+    @property
+    def is_house(self) -> bool:
+        return self.house_component is not None
+    
+    @property
+    def is_military(self) -> bool:
+        return self.barrack_component is not None
+    
+    @property
+    def searches_techs(self) -> bool:
+        return self.research_component is not None
+
+    @property
+    def produces_resources(self) -> bool:
+        return self.production_component is not None
+    
+    @property
+    def is_defensive(self) -> bool:
+        return self.defense_component is not None
+@dataclass(frozen=True)
+class BuildingHouseComponent:
+    slots_provided: int = 0
+
+@dataclass(frozen=True)
+class BuildingBarrackComponent:
+    can_train_units: bool = False
+
+@dataclass(frozen=True)
+class BuildingResearchComponent:
+    can_research_techs: bool = False
+
+@dataclass(frozen=True)
+class BuildingProductionComponent:
+    resources_per_turn: Dict[str, int] = field(default_factory = dict)
+
+@dataclass(frozen=True)
+class BuildingDefenseComponent:
+    is_a_wall: bool = False
+
+@dataclass(frozen=True)
+class UnitBlueprint:
+    label: str
+    icon: str
+    food_cost: int
+    wood_cost: int
+    gold_cost: int
+    defense: int
+    line: str
+
+    infantry_component: Optional[UnitInfantryComponent] = None
+    ranged_component: Optional[UnitRangedComponent] = None
+    cavalry_component: Optional[UnitCavalryComponent] = None
+    anti_cavalry_component: Optional[UnitAntiCavalryComponent] = None
+    siege_component: Optional[UnitSiegeComponent] = None
+
+    @property
+    def is_infantry(self) -> bool:
+        return self.infantry_component is not None
+    
+    @property
+    def is_ranged(self) -> bool:
+        return self.ranged_component is not None
+    
+    @property
+    def is_cavalry(self) -> bool:
+        return self.cavalry_component is not None
+    
+    @property
+    def is_anti_cavalry(self) -> bool:
+        return self.anti_cavalry_component is not None
+    
+    @property
+    def is_siege(self) -> bool:
+        return self.siege_component is not None
+
+@dataclass(frozen=True)
+class UnitInfantryComponent:
+    infantry_power: int
+
+@dataclass(frozen=True)
+class UnitRangedComponent:
+    ranged_power: int
+
+@dataclass(frozen=True)
+class UnitCavalryComponent:
+    cavalry_power: int
+
+@dataclass(frozen=True)
+class UnitAntiCavalryComponent:
+    anti_cavalry_power: int
+
+@dataclass(frozen=True)
+class UnitSiegeComponent:
+    siege_power: int
+
+@dataclass(frozen=True)
+class TechBlueprint:
+    label: str
+    icon: str
+    description: str = ""
+    root_building: Set[str] = field(defaut_factory = set)
+    gold_cost: int = 0
+    hidden: bool = False
+    
+    mod_component: Optional[TechModComponent] = None
+    unit_provision_component: Optional[TechUnitProvisionComponent] = None
+
+    @property
+    def makes_mods(self) -> bool:
+        return self.mod_component is not None
+    
+    @property
+    def sends_units(self) -> bool:
+        return self.unit_provision_component is not None
+
+@dataclass(frozen=True)
+class TechModComponent:
+    mods: Dict[str, float] = field(default_factory=dict)
+
+@dataclass(frozen=True)
+class TechUnitProvisionComponent:
+    units: Dict[str, int] = field(default_factory=dict)
+
+#Código antigo
+
+
 CIVS = {
     "Teresópolis": {
         "label": "Teresópolis 🏔️",
