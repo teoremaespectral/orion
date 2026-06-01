@@ -9,6 +9,7 @@ class BuildingBlueprint:
     wood_cost: int = 0
     gold_cost: int = 0
     slots: int = 0
+    defense: int = 0
 
     house_component: Optional[BuildingHouseComponent] = None
     barrack_component: Optional[BuildingBarrackComponent] = None
