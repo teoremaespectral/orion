@@ -117,7 +117,7 @@ class TechBlueprint:
     label: str
     icon: str
     description: str = ""
-    root_building: Set[str] = field(defaut_factory = set)
+    root_building: Set[str] = field(default_factory = set)
     gold_cost: int = 0
     hidden: bool = False
     

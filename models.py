@@ -1,9 +1,9 @@
-from constants import BUILDING_CATALOG
+from constants import BUILDING_CATALOG, UNIT_CATALOG, TECHNOLOGY_CATALOG, CIVS, INITIAL_LIFE
 from typing import Dict, List, Set
 from math import ceil
 
 class Building:
-    ''''''
+    '''Classe responsável por representar um conjunto de construções do mesmo tipo no reino'''
     
     def __init__(self, building_id: str, quantity: int = 1):
         self.building_id = building_id
@@ -22,7 +22,15 @@ class Building:
         return self.blueprint.icon
     
     def get_cost(self, modifier: Dict[str, int]) -> Dict[str, int]:
-        pass
+        cost = {}
+        base_cost = self.blueprint.cost
+
+        for res_name, base_cost in base_cost.items():
+            cost_modifier = modifier.get(f'{res_name}_cost_multiplier', 1.0)
+            cost[res_name] = ceil(base_cost * cost_modifier)
+
+        return cost
+        
     
     def get_total_slots_occupied(self) -> int:
         return self.blueprint.slots * self.quantity
@@ -172,7 +180,6 @@ class Unit:
         return self.blueprint.cavalry_component.cavalry_power * self.quantity
 
     def get_anti_cavalry_power(self) -> int:
-        '''Retorna o poder total de interceptação para a Fase de Mergulho.'''
         if not self.is_anti_cavalry:
             return 0
         return self.blueprint.anti_cavalry_component.anti_cavalry_power * self.quantity
@@ -212,3 +219,181 @@ class Army:
         if unit.quantity <= 0:
             del self.units[unit_id]
 
+class Tech:
+
+    def __init__(self, tech_id: str):
+        self.tech_id = tech_id
+
+    @property
+    def blueprint(self):
+        '''Busca o DNA imutável da tecnologia no catálogo de constantes.'''
+        return TECHNOLOGY_CATALOG[self.tech_id]
+
+    @property
+    def label(self) -> str:
+        return self.blueprint.label
+
+    @property
+    def icon(self) -> str:
+        return self.blueprint.icon
+
+    @property
+    def description(self) -> str:
+        return self.blueprint.description
+
+    @property
+    def applies_modifiers(self) -> bool:
+        return self.blueprint.applies_modifiers
+
+    @property
+    def spawns_units(self) -> bool:
+        return self.blueprint.spawns_units
+
+    def get_modifier_value(self, modifier_key: str) -> float:
+        if not self.applies_modifiers:
+            return 1.0
+
+        mods_dict = self.blueprint.mods_component.mods
+        return mods_dict.get(modifier_key, 1.0)
+
+    def get_unit_provisions(self) -> Dict[str, int]:
+        if not self.spawns_units:
+            return {}
+
+        return self.blueprint.unit_provision_component.units
+
+    def __str__(self) -> str:
+        return f"{self.icon} {self.label}"
+
+class TechTree:
+    def __init__(self):
+        self.researched_techs: Dict[str, Tech] = {}
+
+    def is_researched(self, tech_id: str) -> bool:
+        return tech_id in self.researched_techs
+
+    def unlock_technology(self, tech_id: str) -> None:
+        if not self.is_researched(tech_id):
+            self.researched_techs[tech_id] = Tech(tech_id)
+
+    def get_active_modifier(self, modifier_key: str) -> float:
+        multiplier = 1.0
+        for tech in self.researched_techs.values():
+            multiplier *= tech.get_modifier_value(modifier_key)
+        return multiplier
+
+class Treasure:
+    
+    def __init__(self, food: int = 0, wood: int = 0, gold: int = 0):
+        self.food = food
+        self.wood = wood
+        self.gold = gold
+
+    def can_afford(self, costs: Dict[str, int]) -> bool:
+        return (self.food >= costs.get('food_cost', 0) and
+                self.wood >= costs.get('wood_cost', 0) and
+                self.gold >= costs.get('gold_cost', 0))
+
+    def deduct(self, costs: Dict[str, int]) -> bool:
+        if not self.can_afford(costs):
+            return False
+
+        self.food -= costs.get('food_cost', 0)
+        self.wood -= costs.get('wood_cost', 0)
+        self.gold -= costs.get('gold_cost', 0)
+        return True
+
+    def add_resources(self, resources: Dict[str, int]) -> None:
+        self.food += resources.get('food', 0)
+        self.wood += resources.get('wood', 0)
+        self.gold += resources.get('gold', 0)
+
+    def __str__(self) -> str:
+        return f"🍎 Comida: {self.food} | 🪵 Madeira: {self.wood} | 💰 Ouro: {self.gold}"
+        
+
+class Kingdom:
+    def __init__(self, user_id: str, user_name: str, civ_name: str = "Teresópolis"):
+        self.user_id = user_id
+        self.user_name = user_name
+        self.civ_name = civ_name
+        self.life = INITIAL_LIFE
+
+        self.treasure = Treasure()
+        self.infrastructure = Infrastructure()
+        self.army = Army()
+        self.tech_tree = TechTree()
+
+    def get_modifier(self, modifier_key: str) -> float:
+        multiplier = self.tech_tree.get_active_modifier(modifier_key)
+
+        return multiplier
+
+    def build(self, building_id: str) -> bool:
+        blueprint = BUILDING_CATALOG.get(building_id)
+        if not blueprint:
+            return False
+
+        if blueprint.slots > 0 and not self.infrastructure.has_free_slots:
+            return False
+
+        temp_building = Building(building_id)
+        ctx_modifier = {
+            'food_modifier': self.get_modifier('food_cost_multiplier'),
+            'wood_modifier': self.get_modifier('wood_cost_multiplier'),
+            'gold_modifier': self.get_modifier('gold_cost_multiplier')
+        }
+        calculated_cost = temp_building.get_cost(ctx_modifier)
+
+        if self.treasure.deduct(calculated_cost):
+            self.infrastructure.add_building(building_id)
+            return True
+
+        return False
+
+    def research(self, tech_id: str) -> bool:
+        blueprint = TECHNOLOGY_CATALOG.get(tech_id)
+        if not blueprint:
+            return False
+
+        built_ids = set(self.infrastructure.buildings.keys())
+        if self.tech_tree.get_tech_status(tech_id, built_ids) != "available":
+            return False
+
+        cost_dict = {'gold_cost': blueprint.gold_cost}
+        
+        if self.treasure.deduct(cost_dict):
+            self.tech_tree.unlock_technology(tech_id)
+
+            active_tech = self.tech_tree.researched_techs[tech_id]
+            if active_tech.spawns_units:
+                for unit_id, quantity in active_tech.get_unit_provisions().items():
+                    self.army.add_units(unit_id, quantity)
+            
+            return True
+
+        return False
+
+    def produce_resources(self) -> None:
+        ctx_modifier = {
+            'food_production_multiplier': self.get_modifier('food_production_multiplier'),
+            'wood_production_multiplier': self.get_modifier('wood_production_multiplier'),
+            'gold_production_multiplier': self.get_modifier('gold_production_multiplier')
+        }
+        
+        turn_production = self.infrastructure.get_all_production(ctx_modifier)
+        self.treasure.add_resources(turn_production)
+
+    def __str__(self) -> str:
+        return (
+            f"👑 **Soberano:** {self.user_name}\n"
+            f"🏛️ **Civilização:** {self.civ_name}\n"
+            f"❤️ **Integridade do Reino:** {self.life} HP\n"
+            f"────────────────────\n"
+            f"💰 **Tesouro Real:**\n{str(self.treasure)}\n\n"
+            f"🏘️ **Uso de Espaço:** {self.infrastructure.get_total_slots_occupied()}/{self.infrastructure.get_total_slots_available()} slots\n"
+            f"────────────────────\n"
+            f"🏗️ **Canteiro de Obras:**\n{str(self.infrastructure)}\n"
+            f"────────────────────\n"
+            f"💂 **Guarnição das Forças Armadas:**\n{str(self.army)}"
+        )
